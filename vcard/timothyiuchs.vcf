@@ -10,7 +10,7 @@ TEL;TYPE=WORK:
 TEL;TYPE=HOME:
 TEL;TYPE=MSG:+12546309543
 EMAIL;TYPE=WORK:timothy.c.Iuchs.mil@army.mil
-URL:TYPE=Teams:https://teams.microsoft.com/l/chat/0/0?users=timothy.c.iuchs.mil@army.mil
+URL;TYPE=Teams:https://teams.microsoft.com/l/chat/0/0?users=timothy.c.iuchs.mil@army.mil
 URL;TYPE=Signal:https://signal.me/#p/+12546309543
 URL;TYPE=WhatsApp:GAJDPLAZBUQVD1
 URL;TYPE=GitHub:https://github.com/tiuchs
