@@ -8,6 +8,23 @@
   <link rel="icon" href="favicon.png">
   <meta name="theme-color" content="#462eff">
   <link rel="manifest" href="manifest.webmanifest">
+  <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&callback=console.debug&libraries=maps,marker&v=beta">
+    </script>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      gmp-map {
+        height: 100%;
+      }
+
+      /* Optional: Makes the sample page fill the window. */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
 </head>
 <body>
   <nav class="nav" id="nav">
@@ -62,6 +79,10 @@
     transform: translate(0, -7px) rotate(45deg); }
   </style>
   <h1>Hello, world!</h1>
+  <gmp-map center="31.09270668029785,-93.18732452392578" zoom="14" map-id="DEMO_MAP_ID">
+      <gmp-advanced-marker position="31.09270668029785,-93.18732452392578" title="My location">
+      </gmp-advanced-marker>
+    </gmp-map>
   <footer>
     <small>© <script>document.write(new Date().getFullYear())</script> Your company name. All Rights Reserved.</small>
   </footer>
