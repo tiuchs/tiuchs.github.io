@@ -116,6 +116,21 @@
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly"
       defer
     ></script>
+<script>
+  function initMap() {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 11,
+    center: { lat: 41.876, lng: -87.624 },
+  });
+  const ctaLayer = new google.maps.KmlLayer({
+    url: "https://googlearchive.github.io/js-v2-samples/ggeoxml/cta.kml",
+    map: map,
+  });
+}
+
+window.initMap = initMap;
+</script>
+  
   <footer>
     <small>© <script>document.write(new Date().getFullYear())</script> Your company name. All Rights Reserved.</small>
   </footer>
