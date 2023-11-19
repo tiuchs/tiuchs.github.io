@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="1H97qumC7K6O16DqvL0VdCTZtZjxO6fhO">
+	<name>JRTC-UAS-ROZ</name>
+	<gx:CascadingStyle kml:id="__managed_style_02A36016592D1F06CFE2">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_153E769F362D1F06CFE1">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0A9F1811882D1F06CFE1">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_153E769F362D1F06CFE1</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_02A36016592D1F06CFE2</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_2A17A3321F2D1F06CFE8">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=ffee58&amp;id=2001&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_16E0CACDCB2D1F06CFE8">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=ffee58&amp;id=2001&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0400FE07152D1F06CFE8">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_16E0CACDCB2D1F06CFE8</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2A17A3321F2D1F06CFE8</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="06090323172D1EF23D82">
+		<name>ROZ 23-01</name>
+		<LookAt>
+			<longitude>-93.26294442750668</longitude>
+			<latitude>31.28258428720483</latitude>
+			<altitude>131.4679901708394</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>257870.1404248551</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0400FE07152D1F06CFE8</styleUrl>
+		<Point>
+			<coordinates>-93.09441255551188,31.09394007155939,107.9114195919828</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="029F4640762D1F00F10E">
+		<name>Untitled placemark</name>
+		<LookAt>
+			<longitude>-93.07920705438956</longitude>
+			<latitude>31.09005540866098</latitude>
+			<altitude>102.5050974858482</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>47895.93575586565</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0A9F1811882D1F06CFE1</styleUrl>
+		<Point>
+			<coordinates>-93.15472201363421,31.11660019183469,110.9929703711053</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="098CD2F3192D1F022B2B">
+		<name>Untitled placemark</name>
+		<LookAt>
+			<longitude>-93.07920705438956</longitude>
+			<latitude>31.09005540866098</latitude>
+			<altitude>102.5050974858482</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>47895.93575586565</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0A9F1811882D1F06CFE1</styleUrl>
+		<Point>
+			<coordinates>-93.01248367879377,31.08832745328382,96.98303517452028</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="04AC30867E2D1F0257FA">
+		<name>Untitled placemark</name>
+		<LookAt>
+			<longitude>-93.07920705438956</longitude>
+			<latitude>31.09005540866098</latitude>
+			<altitude>102.5050974858482</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>47895.93575586565</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0A9F1811882D1F06CFE1</styleUrl>
+		<Point>
+			<coordinates>-93.04181355760957,30.69293372763392,71.50322227777572</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="07F4DDC8CB2D1F028244">
+		<name>Untitled placemark</name>
+		<LookAt>
+			<longitude>-92.9872268988787</longitude>
+			<latitude>31.16182034371064</latitude>
+			<altitude>90.97038840539497</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>127207.8146901168</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0A9F1811882D1F06CFE1</styleUrl>
+		<Point>
+			<coordinates>-93.29870117281961,31.39639309568789,86.13342179787115</coordinates>
+		</Point>
+	</Placemark>
+	<Folder id="088519736B2D1F07D6E0">
+		<name>Untitled folder</name>
+		<open>1</open>
+		<styleUrl>#__managed_style_0A9F1811882D1F06CFE1</styleUrl>
+	</Folder>
+</Document>
+</kml>
