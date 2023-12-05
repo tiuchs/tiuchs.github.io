@@ -1,35 +1,55 @@
-<!DOCTYPE html><html lang="en" style="background-color: rgb(255, 204, 1);"><head><meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta name="robots" content="noindex, nofollow"> <meta name="author" content="EnBizCard - An Open-Source Digital Business Card Generator"> <meta name="url" content="https://enbizcard.vishnuraghav.com/"> <meta name="designer" content="Vishnu Raghav"> <meta property="og:title" content="Tim Iuchs's Digital Business Card"> <meta property="twitter:title" content="Tim Iuchs's Digital Business Card"> <script>
-          "http"==window.location.href.substr(0,4)&&"/"!=window.location.href.slice(-1)&&window.location.replace(window.location.href+"/");
-        </script> <link href="https://tiuchs.github.io/vcard/style.min.css" rel="stylesheet">
-                  <link href="https://tiuchs.github.io/vcard/font-style.min.css" rel="stylesheet">
+<!DOCTYPE html><html lang="en" style="background-color: rgb(255, 204, 1);">
+	
+<head>
+	<meta charset="UTF-8"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+	<meta name="robots" content="noindex, nofollow"> 
+	<meta name="author" content="EnBizCard - An Open-Source Digital Business Card Generator"> 
+	<meta name="url" content="https://enbizcard.vishnuraghav.com/"> <meta name="designer" content="Vishnu Raghav"> 
+	<meta property="og:title" content="Tim Iuchs's Digital Business Card"> 
+	<meta property="twitter:title" content="Tim Iuchs's Digital Business Card"> 
+	<script>
+		"http"==window.location.href.substr(0,4)&&"/"!=window.location.href.slice(-1)&&window.location.replace(window.location.href+"/");
+       	</script> 
+	
+	<link href="https://tiuchs.github.io/vcard/style.min.css" rel="stylesheet">
+        <link href="https://tiuchs.github.io/vcard/font-style.min.css" rel="stylesheet">
 	<link rel="icon" href="./favicon.ico">
-        
         <title>Tim Iuchs's Digital Business Card</title> 
-       <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-TBEH0QJ861"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+       
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-TBEH0QJ861"></script>
+	<script>
+  		window.dataLayer = window.dataLayer || [];
+  		function gtag(){dataLayer.push(arguments);}
+  		gtag('js', new Date());
 
-  gtag('config', 'G-TBEH0QJ861');
-</script> 
+  		gtag('config', 'G-TBEH0QJ861');
+	</script> 
         <style>
           #body{ font-family: GI; } input[type='range']::-moz-range-track { background: none; } input[type='range']::-moz-range-thumb { -moz-appearance: none; width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; border: none; background: #FFCC01; z-index: 3; cursor: pointer; } input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 1.5rem; height: 1.5rem; border-radius: 0.25rem; border: none; background: #FFCC01; z-index: 3; cursor: pointer; } .closeColor{  } .topAction { filter:invert(1) } .iconColor{ color:#eee; filter:invert(1) } .cardColor{ color:#222 !important } .textColor{ color:#eee !important } .seekbarColor{  background:#FFCC0180 !important }
-        </style> <style>
+        </style> 
+	<style>
           #info{ border-left: 0.25rem dashed #FFCC01 } .section{border-left: 0.25rem solid #FFCC01}
-        </style> <style>
+        </style> 
+	<style>
           #body{
           font-family:'GI', sans-serif
           }
         </style>
 	
-	<link rel="stylesheet" href="./style.min.css"></head> <body id="body"><div id="modal" style="background-color: rgb(34, 31, 32); visibility: hidden; top: 2rem; opacity: 0;"><a id="close" class="closeColor"><div class="icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M18 6 6 18M6 6l12 12" style="fill:none;fill-rule:nonzero;stroke:#fff;stroke-width:2px"></path></svg></div></a> <div id="keyView"><p class="textColor">
+	<link rel="stylesheet" href="./style.min.css">
+</head> 
+
+<body id="body">
+	<div id="modal" style="background-color: rgb(34, 31, 32); visibility: hidden; top: 2rem; opacity: 0;"><a id="close" class="closeColor"><div class="icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M18 6 6 18M6 6l12 12" style="fill:none;fill-rule:nonzero;stroke:#fff;stroke-width:2px"></path></svg></div></a> <div id="keyView"><p class="textColor">
               Use my public key to send me encrypted messages
             </p> <a download="" target="_blank" id="dlKey" rel="noreferrer" tabindex="-1" style="background-color: rgb(255, 204, 1);" href="./Tim Iuchs's public key.asc"><div class="icon iconColor"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M21 15v4c0 1.097-.903 2-2 2H5c-1.097 0-2-.903-2-2v-4m4-5 5 5 5-5m-5 5V3" style="fill:none;fill-rule:nonzero;stroke:#fff;stroke-width:2px"></path></svg></div> <span class="iconColor">Download Key</span></a></div> <div id="copyView"><p class="textColor">
               Copy and send the URL to share my Business Card
-            </p> <button id="copyURL" style="background-color: rgb(255, 204, 1);"><div class="icon iconColor"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M22 11a2 2 0 0 0-2-2h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9Z" style="fill:none;stroke:#fff;stroke-width:2px"></path><path d="M5 15H4c-1.097 0-2-.903-2-2V4c0-1.097.903-2 2-2h9c1.097 0 2 .903 2 2v1" style="fill:none;fill-rule:nonzero;stroke:#fff;stroke-width:2px"></path></svg></div> <span class="iconColor">Copy URL</span></button></div> <div id="qrView" class="textColor"><div id="qr"></div> <h3>Scan the QR Code</h3> <p>to view my Business Card on another device</p><h4>Created with <a href="https://enbizcard.vercel.app/" target="_blank" rel="noopener noreferrer" class="textColor">EnBizCard</a></h4></div></div> <header><div id="topActions" style="display: none;"><div><a id="share"><div class="icon topAction"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-miterlimit:2"><g><path style="fill:none" d="M0 0h24v24H0z"></path><clipPath id="a"><path d="M0 0h24v24H0z"></path></clipPath><g clip-path="url(#a)"><circle cx="17" cy="5" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><circle cx="5" cy="12" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><circle cx="17" cy="19" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><path d="m7.59 13.51 6.83 3.98m-.01-10.98-6.82 3.98" style="fill:none;stroke:#fff;stroke-width:2px"></path></g></g></svg></div></a> <a id="showQR"><div class="icon topAction"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M4 4h4v4H4V4Zm0 12h4v4H4v-4ZM16 4h4v4h-4V4Z" style="fill:none;stroke:#fff;stroke-width:2px"></path><path d="M12 4v14c0 1.097.903 2 2 2h4c1.097 0 2-.903 2-2v-4c0-1.097-.903-2-2-2H4" style="fill:none;stroke:#fff;stroke-width:2px;stroke-linejoin:miter"></path><path style="fill:#fff" d="M15 15h2v2h-2z"></path></svg></div></a></div> <!----></div> <div class="headerImgC"><img id="cover" src="./cover.jpeg" alt="Background Pattern"> <!----></div></header> <main style="background-color: rgb(34, 31, 32); margin-top: 0px;"><img id="profilePhoto" src="./photo.jpeg" alt="Photo"> <div id="info" class="textColor"><p class="name">
-              <H2>Tim Iuchs</H2>
+            </p> <button id="copyURL" style="background-color: rgb(255, 204, 1);"><div class="icon iconColor"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M22 11a2 2 0 0 0-2-2h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9Z" style="fill:none;stroke:#fff;stroke-width:2px"></path><path d="M5 15H4c-1.097 0-2-.903-2-2V4c0-1.097.903-2 2-2h9c1.097 0 2 .903 2 2v1" style="fill:none;fill-rule:nonzero;stroke:#fff;stroke-width:2px"></path></svg></div> <span class="iconColor">Copy URL</span></button></div> <div id="qrView" class="textColor"><div id="qr"></div> <h3>Scan the QR Code</h3> <p>to view my Business Card on another device</p><h4>Created with <a href="https://enbizcard.vercel.app/" target="_blank" rel="noopener noreferrer" class="textColor">EnBizCard</a></h4></div></div> <header><div id="topActions" style="display: none;"><div><a id="share"><div class="icon topAction"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-miterlimit:2"><g><path style="fill:none" d="M0 0h24v24H0z"></path><clipPath id="a"><path d="M0 0h24v24H0z"></path></clipPath><g clip-path="url(#a)"><circle cx="17" cy="5" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><circle cx="5" cy="12" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><circle cx="17" cy="19" r="3" style="fill:none;stroke:#fff;stroke-width:2px"></circle><path d="m7.59 13.51 6.83 3.98m-.01-10.98-6.82 3.98" style="fill:none;stroke:#fff;stroke-width:2px"></path></g></g></svg></div></a> <a id="showQR"><div class="icon topAction"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:2"><path style="fill:none" d="M0 0h24v24H0z"></path><path d="M4 4h4v4H4V4Zm0 12h4v4H4v-4ZM16 4h4v4h-4V4Z" style="fill:none;stroke:#fff;stroke-width:2px"></path><path d="M12 4v14c0 1.097.903 2 2 2h4c1.097 0 2-.903 2-2v-4c0-1.097-.903-2-2-2H4" style="fill:none;stroke:#fff;stroke-width:2px;stroke-linejoin:miter"></path><path style="fill:#fff" d="M15 15h2v2h-2z"></path></svg></div></a></div> <!----></div> <div class="headerImgC"><img id="cover" src="./cover.jpeg" alt="Background Pattern"> <!----></div></header> 
+	
+	<main style="background-color: rgb(34, 31, 32); margin-top: 0px;"><img id="profilePhoto" src="./photo.jpeg" alt="Photo"> <div id="info" class="textColor"><p class="name">
+        <H2>Tim Iuchs</H2>
             </p> <!----> 
              <H3>CPT, AV</H3>
              <p>TF AV, AV MAINTENANCE LEAD (A40)</p>
