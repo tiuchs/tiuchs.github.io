@@ -2,14 +2,15 @@ BEGIN:VCARD
 VERSION:3.0
 N:Iuchs;Timothy;;;
 FN:Timothy Iuchs
-ORG:CGSC
-ADR;TYPE=WORK:100 Stimson Ave, Fort Leavenworth, KS 66027
+ORG:Operations Officer, 7-17 Air Cavalry SQDN
+ADR;TYPE=WORK:Fort Cavazos, TX 76544
 TITLE:CGSC Student
 TEL;TYPE=CELL:+12546309543
 TEL;TYPE=DSN:=+15207062410
 TEL;TYPE=HOME:
 TEL;TYPE=SMS:+12546309543
-EMAIL;TYPE=WORK:timothy.c.Iuchs.mil@army.mil
+EMAIL;TYPE=WORK:timothy.c.iuchs.mil@army.mil
+EMAIL;TYPE=SIPR:timothy.c.iuchs.mil@mail.smil.mil
 URL;TYPE=Microsoft Teams:https://teams.microsoft.com/l/chat/0/0?users=timothy.c.iuchs.mil@army.mil
 URL;TYPE=Signal:https://signal.me/#p/+12546309543
 URL;TYPE=WhatsApp:GAJDPLAZBUQVD1
