@@ -2,13 +2,13 @@ BEGIN:VCARD
 VERSION:3.0
 N:Iuchs;Timothy;;;
 FN:Timothy Iuchs
-ORG:JRTC Operations Group
-ADR;TYPE=WORK:7250 Alabama Avenue, Bldg 1562 Fort Johnson, LA 71459
-TITLE:Aviation Task Force- Aviation Maintenance Lead (A40)
+ORG:CGSC
+ADR;TYPE=WORK:100 Stimson Ave, Fort Leavenworth, KS 66027
+TITLE:CGSC Student
 TEL;TYPE=CELL:+12546309543
-TEL;TYPE=WORK:
+TEL;TYPE=DSN:=+15207062410
 TEL;TYPE=HOME:
-TEL;TYPE=MSG:+12546309543
+TEL;TYPE=SMS:+12546309543
 EMAIL;TYPE=WORK:timothy.c.Iuchs.mil@army.mil
 URL;TYPE=Microsoft Teams:https://teams.microsoft.com/l/chat/0/0?users=timothy.c.iuchs.mil@army.mil
 URL;TYPE=Signal:https://signal.me/#p/+12546309543
