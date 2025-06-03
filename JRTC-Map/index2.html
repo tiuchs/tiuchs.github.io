@@ -7,23 +7,24 @@
   <meta name="description" content="" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <link rel="icon" href="favicon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1XYJoJhX2jUXSFSL5oHaev8Y8M_aBoeQ&callback=console.debug&libraries=maps,marker&v=beta">
-</script>
-<style>
-  /* Always set the map height explicitly to define the size of the div
-   * element that contains the map. */
-  gmp-map {
-    height: 100%;
-  }
+    </script>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      gmp-map {
+        height: 100%;
+      }
 
-  /* Optional: Makes the sample page fill the window. */
-  html,
-  body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-  }
-</style>
+      /* Optional: Makes the sample page fill the window. */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
 </head>
 <body>
   <header>
@@ -61,20 +62,19 @@
     </div>
   </nav>
   <main>
-    <section>
-        <gmp-map center="31.09270668029785,-93.18732452392578" zoom="14" map-id="DEMO_MAP_ID">
-            <gmp-advanced-marker position="31.09270668029785,-93.18732452392578" title="My location">
-            </gmp-advanced-marker>
-          </gmp-map>
-
-    </section>
+    <section></section>
     <section></section>
     <section></section>
   </main>
   <table class="table">
     <tr>
       <td>Row 1, Column 1</td>
-      <td>Row 1, Column 2</td>
+      <td><H2>Google Map</H2>
+        <gmp-map center="31.09270668029785,-93.18732452392578" zoom="14" map-id="c7235330c5eb694b">
+            <gmp-advanced-marker position="31.09270668029785,-93.18732452392578" title="My location">
+            </gmp-advanced-marker>
+          </gmp-map>
+        </td>
     </tr>
   </table>
   <footer>
