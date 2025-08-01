@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="refresh" content="30">
+<title>Network Status Checker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+
+<style>
+body {
+    background: #f8f9fb;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+}
+.card {
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(20,40,120,0.07), 0 1.5px 4px rgba(50,60,90,0.04);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem 2rem 2rem;
+    min-width: 350px;
+    max-width: 95vw;
+}
+.logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.logo-wrap img {
+    height: 62px;
+    width: auto;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(60,60,100,0.10);
+}
+h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 1.1rem;
+    letter-spacing: 0.01em;
+    color: #2d3748;
+    text-align: center;
+}
+.status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid #e6e8ee;
+    padding-bottom: 1.1rem;
+}
+.label {
+    font-weight: 500;
+    color: #5a6779;
+    font-size: 1rem;
+}
+.status-value {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+}
+.online {
+    color: #2ea043;
+}
+.offline {
+    color: #da3633;
+}
+.success {
+    color: #2ea043;
+}
+.fail {
+    color: #da3633;
+}
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+}
+button {
+    padding: 0.6em 1.2em;
+    background: #2967d0;
+    color: #fff;
+    border: none;
+    border-radius: 0.8em;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1.5px 6px rgba(30,50,100,0.05);
+    transition: background 0.15s;
+}
+button:hover {
+    background: #1c4187;
+}
+#updated {
+    margin-top: 1rem;
+    font-size: 0.97rem;
+    color: #7b8794;
+    text-align: right;
+}
+</style>
+<script>
+function CheckOnlineStatus(msg) {
+    var state = document.getElementById("state");
+    var condition = navigator.onLine ? "ONLINE" : "OFFLINE";
+    state.innerHTML = condition;
+    state.className = "status-value " + (navigator.onLine ? "online" : "offline");
+
+    // Test actual connection to both
+    PingGoogle();
+    Ping192();
+}
+
+function PingGoogle() {
+    var pingState = document.getElementById("pingStateGoogle");
+    var pingLabel = document.getElementById("pingLabelGoogle");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "Google Connectivity";
+
+    const url = "https://www.google.com/generate_204";
+    const start = Date.now();
+
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+    }).catch(() => {
+        pingState.innerHTML = "FAILED (no connection)";
+        pingState.className = "status-value fail";
+        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+    });
+}
+
+function Ping192() {
+    var pingState = document.getElementById("pingState192");
+    var pingLabel = document.getElementById("pingLabel192");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "192.168.100.1 Connectivity";
+
+    const url = "http://192.168.100.1/";
+    const start = Date.now();
+
+    // Note: Most browsers block mixed-content HTTP requests from HTTPS pages!
+    // For local or intranet pages, run the HTML from `file://` or host via HTTP, not HTTPS.
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+    }).catch(() => {
+        pingState.innerHTML = "FAILED (no connection)";
+        pingState.className = "status-value fail";
+        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+    });
+}
+
+function Pageloaded() {
+    CheckOnlineStatus("load");
+    window.addEventListener("offline", function() { CheckOnlineStatus("offline") }, false);
+    window.addEventListener("online", function() { CheckOnlineStatus("online") }, false);
+}
+</script>
+</head>
+<body onload="Pageloaded()">
+<div class="card">
+    <div class="logo-wrap">
+        <img src="logo.png" alt="Logo">
+    </div>
+    <h1>Network Status Checker</h1>
+    <div class="status-row">
+        <span class="label">Browser Online Status:</span>
+        <span id="state" class="status-value"></span>
+    </div>
+    <div class="status-row">
+        <span id="pingLabelGoogle" class="label">Google Connectivity</span>
+        <span id="pingStateGoogle" class="status-value"></span>
+    </div>
+    <div class="status-row">
+        <span id="pingLabel192" class="label">192.168.100.1 Connectivity</span>
+        <span id="pingState192" class="status-value"></span>
+    </div>
+    <div class="button-row">
+        <button onclick="PingGoogle(); Ping192();">Check Now</button>
+    </div>
+    <div id="updated"></div>
+</div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(registration) {
+      // Registration successful
+      // console.log('ServiceWorker registered:', registration.scope);
+    }, function(err) {
+      // Registration failed
+      // console.log('ServiceWorker registration failed:', err);
+    });
+  });
+}
+</script>
+
+
+</body>
+</html>

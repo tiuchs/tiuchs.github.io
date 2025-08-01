@@ -1,0 +1,15 @@
+{
+  "short_name": "NetStatus",
+  "name": "Network Status Checker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "description": "Check your connectivity and local device status.",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
