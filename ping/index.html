@@ -1,53 +1,76 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta http-equiv="refresh" content="30">
+<meta charset="utf-8">
 <title>Network Status Checker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="manifest.json">
-
 <style>
+:root {
+    --bg: #f8f9fb;
+    --card-bg: #fff;
+    --text: #222;
+    --accent: #2967d0;
+    --good: #2ea043;
+    --bad: #da3633;
+    --shadow: 0 4px 24px rgba(20,40,120,0.07), 0 1.5px 4px rgba(50,60,90,0.04);
+}
+body[data-theme='dark'] {
+    --bg: #1a202c;
+    --card-bg: #262e3c;
+    --text: #eee;
+    --accent: #8ab4f8;
+    --good: #41e677;
+    --bad: #fa6767;
+    --shadow: 0 2px 16px rgba(12,22,60,0.26), 0 1.5px 4px rgba(40,60,120,0.18);
+}
 body {
-    background: #f8f9fb;
+    background: var(--bg);
     font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     margin: 0;
+    transition: background 0.25s, color 0.25s;
 }
 .card {
-    background: #fff;
-    box-shadow: 0 4px 24px rgba(20,40,120,0.07), 0 1.5px 4px rgba(50,60,90,0.04);
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
     border-radius: 1.25rem;
-    padding: 2.5rem 2rem 2rem 2rem;
-    min-width: 350px;
+    padding: 2.5rem 1rem 2rem 1rem;
+    min-width: 320px;
     max-width: 95vw;
+    width: 100%;
+}
+@media (max-width: 480px) {
+    .card { padding: 1.1rem 0.5rem 1rem 0.5rem; min-width: 0; }
+    h1 { font-size: 1.1rem; }
 }
 .logo-wrap {
     display: flex;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.3rem;
 }
 .logo-wrap img {
-    height: 62px;
-    width: auto;
-    border-radius: 12px;
+    height: 50px; width: auto;
+    border-radius: 10px;
     box-shadow: 0 2px 8px rgba(60,60,100,0.10);
 }
 h1 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 600;
     margin-bottom: 1.1rem;
     letter-spacing: 0.01em;
-    color: #2d3748;
+    color: var(--text);
     text-align: center;
 }
 .status-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.1rem;
     border-bottom: 1px solid #e6e8ee;
     padding-bottom: 1.1rem;
 }
@@ -61,26 +84,19 @@ h1 {
     font-size: 1rem;
     letter-spacing: 0.03em;
 }
-.online {
-    color: #2ea043;
-}
-.offline {
-    color: #da3633;
-}
-.success {
-    color: #2ea043;
-}
-.fail {
-    color: #da3633;
-}
+.online { color: var(--good); }
+.offline { color: var(--bad); }
+.success { color: var(--good); }
+.fail { color: var(--bad); }
 .button-row {
     display: flex;
     justify-content: flex-end;
     gap: 0.8rem;
+    margin-bottom: 1rem;
 }
 button {
     padding: 0.6em 1.2em;
-    background: #2967d0;
+    background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 0.8em;
@@ -90,82 +106,53 @@ button {
     box-shadow: 0 1.5px 6px rgba(30,50,100,0.05);
     transition: background 0.15s;
 }
-button:hover {
-    background: #1c4187;
-}
+button:hover { background: #1c4187; }
 #updated {
-    margin-top: 1rem;
+    margin-top: 0.8rem;
     font-size: 0.97rem;
     color: #7b8794;
     text-align: right;
 }
+#diagnostic-panel {
+    margin-top: 1.3rem;
+    background: rgba(120,140,170,0.07);
+    border-radius: 0.7em;
+    padding: 0.85em 1em 1em 1em;
+    font-size: 0.97em;
+}
+#diagnostic-panel h3 {
+    margin: 0.4em 0 0.5em 0;
+    font-size: 1.08em;
+}
+#custom-ping-form {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    margin: 1em 0;
+}
+#custom-address {
+    flex: 1 1 0;
+    padding: 0.4em;
+    font-size: 1em;
+    border-radius: 0.4em;
+    border: 1px solid #c6ced6;
+    background: var(--bg);
+    color: var(--text);
+}
+.theme-toggle {
+    position: absolute;
+    right: 2vw;
+    top: 2vw;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: var(--text);
+}
 </style>
-<script>
-function CheckOnlineStatus(msg) {
-    var state = document.getElementById("state");
-    var condition = navigator.onLine ? "ONLINE" : "OFFLINE";
-    state.innerHTML = condition;
-    state.className = "status-value " + (navigator.onLine ? "online" : "offline");
-
-    // Test actual connection to both
-    PingGoogle();
-    Ping192();
-}
-
-function PingGoogle() {
-    var pingState = document.getElementById("pingStateGoogle");
-    var pingLabel = document.getElementById("pingLabelGoogle");
-    pingState.innerHTML = "Checking...";
-    pingState.className = "status-value";
-    pingLabel.innerHTML = "Google Connectivity";
-
-    const url = "https://www.google.com/generate_204";
-    const start = Date.now();
-
-    fetch(url, { mode: 'no-cors' }).then(() => {
-        const ms = Date.now() - start;
-        pingState.innerHTML = "Success (" + ms + " ms)";
-        pingState.className = "status-value success";
-        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
-    }).catch(() => {
-        pingState.innerHTML = "FAILED (no connection)";
-        pingState.className = "status-value fail";
-        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
-    });
-}
-
-function Ping192() {
-    var pingState = document.getElementById("pingState192");
-    var pingLabel = document.getElementById("pingLabel192");
-    pingState.innerHTML = "Checking...";
-    pingState.className = "status-value";
-    pingLabel.innerHTML = "192.168.100.1 Connectivity";
-
-    const url = "http://192.168.100.1/";
-    const start = Date.now();
-
-    // Note: Most browsers block mixed-content HTTP requests from HTTPS pages!
-    // For local or intranet pages, run the HTML from `file://` or host via HTTP, not HTTPS.
-    fetch(url, { mode: 'no-cors' }).then(() => {
-        const ms = Date.now() - start;
-        pingState.innerHTML = "Success (" + ms + " ms)";
-        pingState.className = "status-value success";
-        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
-    }).catch(() => {
-        pingState.innerHTML = "FAILED (no connection)";
-        pingState.className = "status-value fail";
-        document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
-    });
-}
-
-function Pageloaded() {
-    CheckOnlineStatus("load");
-    window.addEventListener("offline", function() { CheckOnlineStatus("offline") }, false);
-    window.addEventListener("online", function() { CheckOnlineStatus("online") }, false);
-}
-</script>
 </head>
-<body onload="Pageloaded()">
+<body>
+<button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
 <div class="card">
     <div class="logo-wrap">
         <img src="logo.png" alt="Logo">
@@ -183,25 +170,185 @@ function Pageloaded() {
         <span id="pingLabel192" class="label">192.168.100.1 Connectivity</span>
         <span id="pingState192" class="status-value"></span>
     </div>
+    <form id="custom-ping-form" autocomplete="off" onsubmit="return false;">
+        <input type="text" id="custom-address" placeholder="Enter custom address (IP or URL)">
+        <button type="submit">Ping</button>
+    </form>
+    <div class="status-row" style="margin-bottom:0.4rem;">
+        <span id="pingLabelCustom" class="label"></span>
+        <span id="pingStateCustom" class="status-value"></span>
+    </div>
     <div class="button-row">
-        <button onclick="PingGoogle(); Ping192();">Check Now</button>
+        <button onclick="PingAll();">Check Now</button>
     </div>
     <div id="updated"></div>
+    <div id="diagnostic-panel">
+        <h3>Diagnostics</h3>
+        <div><strong>Browser:</strong> <span id="browser-info"></span></div>
+        <div><strong>Operating System:</strong> <span id="os-info"></span></div>
+        <div><strong>IP Address:</strong> <span id="ip-info">Loading...</span></div>
+        <div><strong>Network Type:</strong> <span id="network-type"></span></div>
+        <div><strong>Uptime:</strong> <span id="uptime"></span></div>
+    </div>
 </div>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(registration) {
-      // Registration successful
-      // console.log('ServiceWorker registered:', registration.scope);
-    }, function(err) {
-      // Registration failed
-      // console.log('ServiceWorker registration failed:', err);
-    });
-  });
+// --- Light/Dark Theme ---
+function setTheme(mode) {
+    document.body.setAttribute('data-theme', mode);
+    localStorage.setItem('theme', mode);
+    document.getElementById("theme-toggle").textContent = (mode === 'dark') ? '☀️' : '🌙';
 }
+document.getElementById("theme-toggle").onclick = function() {
+    setTheme(document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+(function() {
+    let userPref = localStorage.getItem('theme');
+    setTheme(userPref || (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light'));
+})();
+
+// --- Online/Offline Check ---
+function CheckOnlineStatus() {
+    var state = document.getElementById("state");
+    var condition = navigator.onLine ? "ONLINE" : "OFFLINE";
+    state.innerHTML = condition;
+    state.className = "status-value " + (navigator.onLine ? "online" : "offline");
+
+    PingGoogle();
+    Ping192();
+}
+
+// --- Ping Functions ---
+function PingGoogle() {
+    var pingState = document.getElementById("pingStateGoogle");
+    var pingLabel = document.getElementById("pingLabelGoogle");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "Google Connectivity";
+
+    const url = "https://www.google.com/generate_204";
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+    }).catch(() => {
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+    });
+}
+function Ping192() {
+    var pingState = document.getElementById("pingState192");
+    var pingLabel = document.getElementById("pingLabel192");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "192.168.100.1 Connectivity";
+
+    const url = "http://192.168.100.1/";
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+    }).catch(() => {
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+    });
+}
+function PingCustom(addr) {
+    var pingLabel = document.getElementById("pingLabelCustom");
+    var pingState = document.getElementById("pingStateCustom");
+    if (!addr) {
+        pingLabel.textContent = "";
+        pingState.textContent = "";
+        return;
+    }
+    pingLabel.innerHTML = addr + " Connectivity";
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+
+    let url = addr;
+    if (!/^https?:\/\//i.test(url)) {
+        url = (addr.match(/^192\.168\./) || addr.match(/^10\./) || addr.match(/^172\.(1[6-9]|2\d|3[01])\./)) ? "http://" + addr + "/" : "https://" + addr + "/";
+    }
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+    }).catch(() => {
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+    });
+}
+function PingAll() {
+    PingGoogle();
+    Ping192();
+    let addr = document.getElementById("custom-address").value.trim();
+    if (addr) PingCustom(addr);
+}
+function updateChecked() {
+    document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+}
+
+// --- Custom Ping Entry ---
+document.getElementById("custom-ping-form").onsubmit = function() {
+    let addr = document.getElementById("custom-address").value.trim();
+    PingCustom(addr);
+};
+
+// --- Diagnostics Panel ---
+function getOS() {
+    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/windows phone/i.test(userAgent)) return "Windows Phone";
+    if (/android/i.test(userAgent)) return "Android";
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return "iOS";
+    if (/Macintosh|Mac OS X/i.test(userAgent)) return "Mac OS";
+    if (/Windows NT/i.test(userAgent)) return "Windows";
+    if (/Linux/i.test(userAgent)) return "Linux";
+    return "Unknown";
+}
+function updateDiagnostics() {
+    document.getElementById("browser-info").textContent = navigator.userAgent.split(") ")[0] + ")";
+    document.getElementById("os-info").textContent = getOS();
+
+    // Network type (may be empty in some browsers)
+    let netType = "";
+    if ('connection' in navigator) {
+        let conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.type) netType = conn.type;
+        else if (conn && conn.effectiveType) netType = conn.effectiveType;
+    }
+    document.getElementById("network-type").textContent = netType ? netType : "Unknown / Not supported";
+
+    // Uptime
+    let startTime = Date.now();
+    setInterval(() => {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let hrs = Math.floor(elapsed / 3600), min = Math.floor((elapsed % 3600) / 60), sec = elapsed % 60;
+        let upStr = (hrs ? (hrs+"h ") : "") + (min ? (min+"m ") : "") + sec+"s";
+        document.getElementById("uptime").textContent = upStr;
+    }, 1000);
+
+    // Public IP (external request)
+    fetch("https://api.ipify.org?format=json")
+        .then(resp => resp.json())
+        .then(data => { document.getElementById("ip-info").textContent = data.ip; })
+        .catch(() => { document.getElementById("ip-info").textContent = "Unavailable (offline)"; });
+}
+
+// --- Page Load Logic ---
+window.onload = function() {
+    updateDiagnostics();
+    CheckOnlineStatus();
+    window.addEventListener("offline", CheckOnlineStatus, false);
+    window.addEventListener("online", CheckOnlineStatus, false);
+};
 </script>
-
-
 </body>
 </html>
