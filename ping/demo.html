@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <title>Network Status Checker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Favicon (browser tab icon) -->
+  <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-  <!-- App Icon (PWA/home screen) -->
   <link rel="apple-touch-icon" sizes="180x180" href="appicon.png">
   <link rel="manifest" href="manifest.json">
+  <!-- MGRS library (for Lat/Lon → MGRS) -->
+  <script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.min.js"></script>
   <style>
 :root {
     --bg: #f8f9fb;
@@ -140,6 +141,41 @@ button:hover { background: #1c4187; }
     color: #7b8794;
     text-align: right;
 }
+#diagnostic-panel {
+    margin-top: 1.3rem;
+    background: rgba(120,140,170,0.07);
+    border-radius: 0.7em;
+    padding: 0.85em 1em 1em 1em;
+    font-size: 0.97em;
+}
+#diagnostic-panel h3 {
+    margin: 0.4em 0 0.5em 0;
+    font-size: 1.08em;
+}
+#custom-ping-form {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    margin: 1em 0;
+}
+#custom-address {
+    flex: 1 1 0;
+    padding: 0.4em;
+    font-size: 1em;
+    border-radius: 0.4em;
+    border: 1px solid #c6ced6;
+    background: var(--bg);
+    color: var(--text);
+}
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: var(--text);
+    margin-bottom: 1.2em;
+    margin-top: 0.5em;
+}
 #advanced-toggle {
     display: block;
     margin: 1.6em auto 0.7em auto;
@@ -161,26 +197,6 @@ button:hover { background: #1c4187; }
     animation: fadein 0.3s;
 }
 @keyframes fadein { from { opacity: 0;} to {opacity: 1;} }
-.theme-toggle {
-    display: block;
-    margin: 0 0 1em auto;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-    color: var(--text);
-}
-#diagnostic-panel {
-    margin-top: 1.3rem;
-    background: rgba(120,140,170,0.07);
-    border-radius: 0.7em;
-    padding: 0.85em 1em 1em 1em;
-    font-size: 0.97em;
-}
-#diagnostic-panel h3 {
-    margin: 0.4em 0 0.5em 0;
-    font-size: 1.08em;
-}
 #speed-test-result {
     margin-bottom: 1.1em;
 }
@@ -214,8 +230,6 @@ button:hover { background: #1c4187; }
 #banner.offline { background: #fa6767; color: #fff; border: 2px solid #c03232;}
 #banner.online { background: #41e677; color: #111; border: 2px solid #238142;}
   </style>
-  <!-- MGRS conversion library -->
-  <script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.min.js"></script>
 </head>
 <body>
 <div id="banner"></div>
@@ -252,7 +266,9 @@ button:hover { background: #1c4187; }
     <!-- Advanced tools button and section -->
     <button id="advanced-toggle" onclick="toggleAdvanced()">Show Advanced Tools ⬇️</button>
     <div id="advanced-section">
+        <!-- Theme toggle here -->
         <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+        <!-- Diagnostic panel -->
         <div id="diagnostic-panel">
             <h3>Diagnostics</h3>
             <div><strong>Browser:</strong> <span id="browser-info"></span></div>
@@ -306,7 +322,7 @@ window.addEventListener('online', () => showBanner("You are ONLINE!", "online"))
 /* ========== CONNECTION QUALITY ========== */
 function setConnectionQuality(ms, isOnline) {
     const q = document.getElementById("connection-quality");
-    let label = "Offline", className = "quality-bar quality-offline";
+    let label = "Offline", className = "quality-bar quality-offline", barColor = "#da3633";
     if (!isOnline) {
         label = "Offline";
         className = "quality-bar quality-offline";
@@ -323,7 +339,7 @@ function setConnectionQuality(ms, isOnline) {
         label = "Poor";
         className = "quality-bar quality-poor";
     }
-    q.innerHTML = `<span class="${className}"></span>Connection Quality: ${label} ${isOnline ? (ms ? '('+ms+'ms)' : '') : ''}`;
+    q.innerHTML = `<span class="${className}"></span>Connection Quality: ${label} ${isOnline ? `(${ms ? ms+'ms' : '--'})` : ''}`;
 }
 
 /* ========== MAIN PING/STATUS LOGIC ========== */
@@ -424,3 +440,133 @@ function PingAll() {
     Ping192();
     let addr = document.getElementById("custom-address").value.trim();
     if (addr) PingCustom(addr);
+}
+function updateChecked() {
+    document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+}
+document.getElementById("custom-ping-form").onsubmit = function() {
+    let addr = document.getElementById("custom-address").value.trim();
+    PingCustom(addr);
+};
+
+/* ========== DIAGNOSTICS PANEL ========== */
+function getOS() {
+    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/windows phone/i.test(userAgent)) return "Windows Phone";
+    if (/android/i.test(userAgent)) return "Android";
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return "iOS";
+    if (/Macintosh|Mac OS X/i.test(userAgent)) return "Mac OS";
+    if (/Windows NT/i.test(userAgent)) return "Windows";
+    if (/Linux/i.test(userAgent)) return "Linux";
+    return "Unknown";
+}
+function updateDiagnostics() {
+    document.getElementById("browser-info").textContent = navigator.userAgent.split(") ")[0] + ")";
+    document.getElementById("os-info").textContent = getOS();
+    let netType = "";
+    if ('connection' in navigator) {
+        let conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.type) netType = conn.type;
+        else if (conn && conn.effectiveType) netType = conn.effectiveType;
+    }
+    document.getElementById("network-type").textContent = netType ? netType : "Unknown / Not supported";
+    // Uptime
+    let startTime = Date.now();
+    setInterval(() => {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let hrs = Math.floor(elapsed / 3600), min = Math.floor((elapsed % 3600) / 60), sec = elapsed % 60;
+        let upStr = (hrs ? (hrs+"h ") : "") + (min ? (min+"m ") : "") + sec+"s";
+        document.getElementById("uptime").textContent = upStr;
+    }, 1000);
+    // Public IP (external request)
+    fetch("https://api.ipify.org?format=json")
+        .then(resp => resp.json())
+        .then(data => { document.getElementById("ip-info").textContent = data.ip; })
+        .catch(() => { document.getElementById("ip-info").textContent = "Unavailable (offline)"; });
+}
+
+/* ========== ADVANCED TOOLS EXPANDER ========== */
+function toggleAdvanced() {
+    let adv = document.getElementById("advanced-section");
+    let btn = document.getElementById("advanced-toggle");
+    if (adv.style.display === "block") {
+        adv.style.display = "none";
+        btn.innerHTML = "Show Advanced Tools ⬇️";
+    } else {
+        adv.style.display = "block";
+        btn.innerHTML = "Hide Advanced Tools ⬆️";
+    }
+}
+
+/* ========== SPEED TEST (BASIC) ========== */
+function runSpeedTest() {
+    let speedOut = document.getElementById("speed-out");
+    speedOut.textContent = "Testing...";
+    // Uses a small file from Google. Can be replaced with other static files.
+    let testUrl = "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
+    let sizeBytes = 13504; // Approximate size of the image in bytes (update if using a different file)
+    let start = Date.now();
+    fetch(testUrl + "?cachebust=" + Math.random(), { mode: 'no-cors' }).then(() => {
+        let duration = (Date.now() - start) / 1000;
+        let bitsLoaded = sizeBytes * 8;
+        let speedMbps = (bitsLoaded / duration / 1024 / 1024).toFixed(2);
+        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps`;
+    }).catch(() => {
+        speedOut.textContent = "Speed test failed (maybe offline)";
+    });
+}
+
+/* ========== GEOLOCATION (Lat/Lon, MGRS, Maps links) ========== */
+function getGeo() {
+    let geoOut = document.getElementById("geo-out");
+    geoOut.textContent = "Requesting location...";
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            let lat = pos.coords.latitude;
+            let lon = pos.coords.longitude;
+            let latFixed = lat.toFixed(6);
+            let lonFixed = lon.toFixed(6);
+            let gmap = `https://maps.google.com/?q=${latFixed},${lonFixed}`;
+            let amap = `https://maps.apple.com/?ll=${latFixed},${lonFixed}`;
+            // Convert to MGRS (lon, lat order!)
+            let mgrsCoord = (typeof mgrs !== "undefined" && typeof mgrs.forward === "function")
+                ? mgrs.forward([lon, lat], 5)
+                : "MGRS unavailable";
+            geoOut.innerHTML =
+                `Latitude: ${latFixed}<br>
+                Longitude: ${lonFixed}<br>
+                MGRS: <span style="font-family:monospace">${mgrsCoord}</span><br>
+                <a href="${gmap}" target="_blank" rel="noopener">View on Google Maps</a>
+                &nbsp;|&nbsp;
+                <a href="${amap}" target="_blank" rel="noopener">View on Apple Maps</a>`;
+        }, function(err) {
+            geoOut.textContent = "Location access denied or unavailable.";
+        });
+    } else {
+        geoOut.textContent = "Geolocation not supported in this browser.";
+    }
+}
+
+/* ========== LOG DOWNLOAD (CSV) ========== */
+function downloadLog() {
+    let csv = "Timestamp,Address,Status,Latency (ms)\n";
+    pingLogs.forEach(row => {
+        csv += `${row.timestamp},${row.address},${row.status},${row.ms === null ? "" : row.ms}\n`;
+    });
+    let blob = new Blob([csv], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = "network_logs.csv";
+    link.click();
+}
+
+/* ========== INITIALIZATION ========== */
+window.onload = function() {
+    updateDiagnostics();
+    CheckOnlineStatus();
+    window.addEventListener("offline", CheckOnlineStatus, false);
+    window.addEventListener("online", CheckOnlineStatus, false);
+};
+</script>
+</body>
+</html>
