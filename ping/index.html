@@ -9,6 +9,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="appicon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/dist/mgrs.min.js"></script>
+
 <link rel="manifest" href="manifest.json">
 <style>
 :root {
@@ -528,9 +530,9 @@ function getGeo() {
             let lonFixed = lon.toFixed(6);
             let gmap = `https://maps.google.com/?q=${latFixed},${lonFixed}`;
             let amap = `https://maps.apple.com/?ll=${latFixed},${lonFixed}`;
-            // Convert to MGRS
-            let mgrsCoord = (typeof mgrs !== "undefined")
-                ? mgrs.forward([lon, lat], 5) // 5-digit accuracy
+            // Convert to MGRS (lon, lat order!)
+            let mgrsCoord = (typeof mgrs !== "undefined" && typeof mgrs.forward === "function")
+                ? mgrs.forward([lon, lat], 5)
                 : "MGRS unavailable";
             geoOut.innerHTML =
                 `Latitude: ${latFixed}<br>
