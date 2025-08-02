@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Network Status Checker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+    --bg: #f8f9fb;
+    --card-bg: #fff;
+    --text: #222;
+    --accent: #2967d0;
+    --good: #2ea043;
+    --bad: #da3633;
+    --shadow: 0 4px 24px rgba(20,40,120,0.07), 0 1.5px 4px rgba(50,60,90,0.04);
+}
+body[data-theme='dark'] {
+    --bg: #1a202c;
+    --card-bg: #262e3c;
+    --text: #eee;
+    --accent: #8ab4f8;
+    --good: #41e677;
+    --bad: #fa6767;
+    --shadow: 0 2px 16px rgba(12,22,60,0.26), 0 1.5px 4px rgba(40,60,120,0.18);
+}
+body {
+    background: var(--bg);
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    transition: background 0.25s, color 0.25s;
+}
+.card {
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    border-radius: 1.25rem;
+    padding: 2.5rem 1rem 2rem 1rem;
+    min-width: 320px;
+    max-width: 95vw;
+    width: 100%;
+    position: relative;
+}
+@media (max-width: 480px) {
+    .card { padding: 1.1rem 0.5rem 1rem 0.5rem; min-width: 0; }
+    h1 { font-size: 1.1rem; }
+}
+.logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.3rem;
+}
+.logo-wrap img {
+    height: 50px; width: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(60,60,100,0.10);
+}
+h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.01em;
+    color: var(--text);
+    text-align: center;
+}
+#connection-quality {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1em;
+    font-weight: 600;
+    font-size: 1.09em;
+}
+.quality-bar {
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 50%;
+    margin-right: 0.7em;
+    background: var(--good);
+    transition: background 0.3s;
+    display: inline-block;
+}
+.quality-poor { background: #e6712e !important; }
+.quality-fair { background: #f9d833 !important; }
+.quality-good { background: #2ea043 !important; }
+.quality-excellent { background: #1ed760 !important; }
+.quality-offline { background: #da3633 !important; }
+.status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+    border-bottom: 1px solid #e6e8ee;
+    padding-bottom: 1.1rem;
+}
+.label {
+    font-weight: 500;
+    color: #5a6779;
+    font-size: 1rem;
+}
+.status-value {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+}
+.online { color: var(--good); }
+.offline { color: var(--bad); }
+.success { color: var(--good); }
+.fail { color: var(--bad); }
+.button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+button {
+    padding: 0.6em 1.2em;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 0.8em;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1.5px 6px rgba(30,50,100,0.05);
+    transition: background 0.15s;
+}
+button:hover { background: #1c4187; }
+#updated {
+    margin-top: 0.8rem;
+    font-size: 0.97rem;
+    color: #7b8794;
+    text-align: right;
+}
+#diagnostic-panel {
+    margin-top: 1.3rem;
+    background: rgba(120,140,170,0.07);
+    border-radius: 0.7em;
+    padding: 0.85em 1em 1em 1em;
+    font-size: 0.97em;
+}
+#diagnostic-panel h3 {
+    margin: 0.4em 0 0.5em 0;
+    font-size: 1.08em;
+}
+#custom-ping-form {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    margin: 1em 0;
+}
+#custom-address {
+    flex: 1 1 0;
+    padding: 0.4em;
+    font-size: 1em;
+    border-radius: 0.4em;
+    border: 1px solid #c6ced6;
+    background: var(--bg);
+    color: var(--text);
+}
+.theme-toggle {
+    position: absolute;
+    right: 2vw;
+    top: 2vw;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: var(--text);
+}
+#advanced-toggle {
+    display: block;
+    margin: 1.6em auto 0.7em auto;
+    background: none;
+    color: var(--accent);
+    border: none;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+}
+#advanced-section {
+    display: none;
+    margin-top: 1.1em;
+    background: rgba(60,110,200,0.04);
+    border-radius: 0.7em;
+    padding: 1.3em 1.1em 1em 1.1em;
+    animation: fadein 0.3s;
+}
+@keyframes fadein { from { opacity: 0;} to {opacity: 1;} }
+#speed-test-result {
+    margin-bottom: 1.1em;
+}
+#geo-info {
+    margin-bottom: 1.1em;
+}
+#log-download {
+    margin-bottom: 1em;
+}
+#banner {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 180px;
+    max-width: 94vw;
+    padding: 0.8em 2em;
+    border-radius: 0.7em;
+    font-weight: 700;
+    font-size: 1em;
+    text-align: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+#banner.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+#banner.offline { background: #fa6767; color: #fff; border: 2px solid #c03232;}
+#banner.online { background: #41e677; color: #111; border: 2px solid #238142;}
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+<div class="card">
+    <div class="logo-wrap">
+        <img src="logo.png" alt="Logo">
+    </div>
+    <h1>Network Status Checker</h1>
+    <div id="connection-quality"></div>
+    <div class="status-row">
+        <span class="label">Browser Online Status:</span>
+        <span id="state" class="status-value"></span>
+    </div>
+    <div class="status-row">
+        <span id="pingLabelGoogle" class="label">Google Connectivity</span>
+        <span id="pingStateGoogle" class="status-value"></span>
+    </div>
+    <div class="status-row">
+        <span id="pingLabel192" class="label">192.168.100.1 Connectivity</span>
+        <span id="pingState192" class="status-value"></span>
+    </div>
+    <form id="custom-ping-form" autocomplete="off" onsubmit="return false;">
+        <input type="text" id="custom-address" placeholder="Enter custom address (IP or URL)">
+        <button type="submit">Ping</button>
+    </form>
+    <div class="status-row" style="margin-bottom:0.4rem;">
+        <span id="pingLabelCustom" class="label"></span>
+        <span id="pingStateCustom" class="status-value"></span>
+    </div>
+    <div class="button-row">
+        <button onclick="PingAll();">Check Now</button>
+    </div>
+    <div id="updated"></div>
+    <div id="diagnostic-panel">
+        <h3>Diagnostics</h3>
+        <div><strong>Browser:</strong> <span id="browser-info"></span></div>
+        <div><strong>Operating System:</strong> <span id="os-info"></span></div>
+        <div><strong>IP Address:</strong> <span id="ip-info">Loading...</span></div>
+        <div><strong>Network Type:</strong> <span id="network-type"></span></div>
+        <div><strong>Uptime:</strong> <span id="uptime"></span></div>
+    </div>
+    <button id="advanced-toggle" onclick="toggleAdvanced()">Show Advanced Tools ⬇️</button>
+    <div id="advanced-section">
+        <div id="speed-test-result">
+            <button onclick="runSpeedTest()">Run Speed Test</button>
+            <div id="speed-out"></div>
+        </div>
+        <div id="geo-info">
+            <button onclick="getGeo()">Show Location</button>
+            <div id="geo-out"></div>
+        </div>
+        <div id="log-download">
+            <button onclick="downloadLog()">Download Logs (CSV)</button>
+        </div>
+    </div>
+</div>
+<script>
+/* ========== THEME TOGGLE ========== */
+function setTheme(mode) {
+    document.body.setAttribute('data-theme', mode);
+    localStorage.setItem('theme', mode);
+    document.getElementById("theme-toggle").textContent = (mode === 'dark') ? '☀️' : '🌙';
+}
+document.getElementById("theme-toggle").onclick = function() {
+    setTheme(document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+};
+(function() {
+    let userPref = localStorage.getItem('theme');
+    setTheme(userPref || (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light'));
+})();
+
+/* ========== ONLINE/OFFLINE BANNER ========== */
+let bannerTimeout;
+function showBanner(text, type) {
+    const banner = document.getElementById("banner");
+    banner.textContent = text;
+    banner.className = "show " + (type === "offline" ? "offline" : "online");
+    clearTimeout(bannerTimeout);
+    if(type === "online") {
+        bannerTimeout = setTimeout(() => { banner.className = ""; }, 3200);
+    }
+}
+window.addEventListener('offline', () => showBanner("You are OFFLINE!", "offline"));
+window.addEventListener('online', () => showBanner("You are ONLINE!", "online"));
+
+/* ========== CONNECTION QUALITY ========== */
+function setConnectionQuality(ms, isOnline) {
+    const q = document.getElementById("connection-quality");
+    let label = "Offline", className = "quality-bar quality-offline", barColor = "#da3633";
+    if (!isOnline) {
+        label = "Offline";
+        className = "quality-bar quality-offline";
+    } else if (ms <= 60) {
+        label = "Excellent";
+        className = "quality-bar quality-excellent";
+    } else if (ms <= 150) {
+        label = "Good";
+        className = "quality-bar quality-good";
+    } else if (ms <= 400) {
+        label = "Fair";
+        className = "quality-bar quality-fair";
+    } else {
+        label = "Poor";
+        className = "quality-bar quality-poor";
+    }
+    q.innerHTML = `<span class="${className}"></span>Connection Quality: ${label} ${isOnline ? `(${ms ? ms+'ms' : '--'})` : ''}`;
+}
+
+/* ========== MAIN PING/STATUS LOGIC ========== */
+let pingLogs = []; // {timestamp, address, status, ms}
+let lastGoogleMs = null;
+function logPing(address, status, ms) {
+    pingLogs.push({ timestamp: new Date().toISOString(), address, status, ms });
+    if(pingLogs.length > 100) pingLogs.shift();
+}
+function CheckOnlineStatus() {
+    var state = document.getElementById("state");
+    var condition = navigator.onLine ? "ONLINE" : "OFFLINE";
+    state.innerHTML = condition;
+    state.className = "status-value " + (navigator.onLine ? "online" : "offline");
+    PingGoogle();
+    Ping192();
+}
+function PingGoogle() {
+    var pingState = document.getElementById("pingStateGoogle");
+    var pingLabel = document.getElementById("pingLabelGoogle");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "Google Connectivity";
+
+    const url = "https://www.google.com/generate_204";
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        lastGoogleMs = ms;
+        setConnectionQuality(ms, true);
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+        logPing("Google", "Success", ms);
+    }).catch(() => {
+        lastGoogleMs = null;
+        setConnectionQuality(null, false);
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+        logPing("Google", "Fail", null);
+    });
+}
+function Ping192() {
+    var pingState = document.getElementById("pingState192");
+    var pingLabel = document.getElementById("pingLabel192");
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+    pingLabel.innerHTML = "192.168.100.1 Connectivity";
+
+    const url = "http://192.168.100.1/";
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+        logPing("192.168.100.1", "Success", ms);
+    }).catch(() => {
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+        logPing("192.168.100.1", "Fail", null);
+    });
+}
+function PingCustom(addr) {
+    var pingLabel = document.getElementById("pingLabelCustom");
+    var pingState = document.getElementById("pingStateCustom");
+    if (!addr) {
+        pingLabel.textContent = "";
+        pingState.textContent = "";
+        return;
+    }
+    pingLabel.innerHTML = addr + " Connectivity";
+    pingState.innerHTML = "Checking...";
+    pingState.className = "status-value";
+
+    let url = addr;
+    if (!/^https?:\/\//i.test(url)) {
+        url = (addr.match(/^192\.168\./) || addr.match(/^10\./) || addr.match(/^172\.(1[6-9]|2\d|3[01])\./)) ? "http://" + addr + "/" : "https://" + addr + "/";
+    }
+    const start = Date.now();
+    fetch(url, { mode: 'no-cors' }).then(() => {
+        const ms = Date.now() - start;
+        pingState.innerHTML = "Success (" + ms + " ms)";
+        pingState.className = "status-value success";
+        updateChecked();
+        logPing(addr, "Success", ms);
+    }).catch(() => {
+        pingState.innerHTML = "FAILED";
+        pingState.className = "status-value fail";
+        updateChecked();
+        logPing(addr, "Fail", null);
+    });
+}
+function PingAll() {
+    PingGoogle();
+    Ping192();
+    let addr = document.getElementById("custom-address").value.trim();
+    if (addr) PingCustom(addr);
+}
+function updateChecked() {
+    document.getElementById("updated").innerHTML = "Last checked: " + new Date().toLocaleTimeString();
+}
+document.getElementById("custom-ping-form").onsubmit = function() {
+    let addr = document.getElementById("custom-address").value.trim();
+    PingCustom(addr);
+};
+
+/* ========== DIAGNOSTICS PANEL ========== */
+function getOS() {
+    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/windows phone/i.test(userAgent)) return "Windows Phone";
+    if (/android/i.test(userAgent)) return "Android";
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return "iOS";
+    if (/Macintosh|Mac OS X/i.test(userAgent)) return "Mac OS";
+    if (/Windows NT/i.test(userAgent)) return "Windows";
+    if (/Linux/i.test(userAgent)) return "Linux";
+    return "Unknown";
+}
+function updateDiagnostics() {
+    document.getElementById("browser-info").textContent = navigator.userAgent.split(") ")[0] + ")";
+    document.getElementById("os-info").textContent = getOS();
+    let netType = "";
+    if ('connection' in navigator) {
+        let conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn && conn.type) netType = conn.type;
+        else if (conn && conn.effectiveType) netType = conn.effectiveType;
+    }
+    document.getElementById("network-type").textContent = netType ? netType : "Unknown / Not supported";
+    // Uptime
+    let startTime = Date.now();
+    setInterval(() => {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let hrs = Math.floor(elapsed / 3600), min = Math.floor((elapsed % 3600) / 60), sec = elapsed % 60;
+        let upStr = (hrs ? (hrs+"h ") : "") + (min ? (min+"m ") : "") + sec+"s";
+        document.getElementById("uptime").textContent = upStr;
+    }, 1000);
+    // Public IP (external request)
+    fetch("https://api.ipify.org?format=json")
+        .then(resp => resp.json())
+        .then(data => { document.getElementById("ip-info").textContent = data.ip; })
+        .catch(() => { document.getElementById("ip-info").textContent = "Unavailable (offline)"; });
+}
+
+/* ========== ADVANCED TOOLS EXPANDER ========== */
+function toggleAdvanced() {
+    let adv = document.getElementById("advanced-section");
+    let btn = document.getElementById("advanced-toggle");
+    if (adv.style.display === "block") {
+        adv.style.display = "none";
+        btn.innerHTML = "Show Advanced Tools ⬇️";
+    } else {
+        adv.style.display = "block";
+        btn.innerHTML = "Hide Advanced Tools ⬆️";
+    }
+}
+
+/* ========== SPEED TEST (BASIC) ========== */
+function runSpeedTest() {
+    let speedOut = document.getElementById("speed-out");
+    speedOut.textContent = "Testing...";
+    // Uses a small file from Google. Can be replaced with other static files.
+    let testUrl = "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
+    let sizeBytes = 13504; // Approximate size of the image in bytes (update if using a different file)
+    let start = Date.now();
+    fetch(testUrl + "?cachebust=" + Math.random(), { mode: 'no-cors' }).then(() => {
+        let duration = (Date.now() - start) / 1000;
+        let bitsLoaded = sizeBytes * 8;
+        let speedMbps = (bitsLoaded / duration / 1024 / 1024).toFixed(2);
+        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps`;
+    }).catch(() => {
+        speedOut.textContent = "Speed test failed (maybe offline)";
+    });
+}
+
+/* ========== GEOLOCATION ========== */
+function getGeo() {
+    let geoOut = document.getElementById("geo-out");
+    geoOut.textContent = "Requesting location...";
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            geoOut.textContent = `Latitude: ${pos.coords.latitude.toFixed(4)}, Longitude: ${pos.coords.longitude.toFixed(4)}`;
+        }, function(err) {
+            geoOut.textContent = "Location access denied or unavailable.";
+        });
+    } else {
+        geoOut.textContent = "Geolocation not supported in this browser.";
+    }
+}
+
+/* ========== LOG DOWNLOAD (CSV) ========== */
+function downloadLog() {
+    let csv = "Timestamp,Address,Status,Latency (ms)\n";
+    pingLogs.forEach(row => {
+        csv += `${row.timestamp},${row.address},${row.status},${row.ms === null ? "" : row.ms}\n`;
+    });
+    let blob = new Blob([csv], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = "network_logs.csv";
+    link.click();
+}
+
+/* ========== INITIALIZATION ========== */
+window.onload = function() {
+    updateDiagnostics();
+    CheckOnlineStatus();
+    window.addEventListener("offline", CheckOnlineStatus, false);
+    window.addEventListener("online", CheckOnlineStatus, false);
+};
+</script>
+</body>
+</html>
