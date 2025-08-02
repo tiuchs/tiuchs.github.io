@@ -515,7 +515,15 @@ function getGeo() {
     geoOut.textContent = "Requesting location...";
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(pos) {
-            geoOut.textContent = `Latitude: ${pos.coords.latitude.toFixed(4)}, Longitude: ${pos.coords.longitude.toFixed(4)}`;
+            let lat = pos.coords.latitude.toFixed(6);
+            let lon = pos.coords.longitude.toFixed(6);
+            let gmap = `https://maps.google.com/?q=${lat},${lon}`;
+            let amap = `https://maps.apple.com/?ll=${lat},${lon}`;
+            geoOut.innerHTML =
+                `Latitude: ${lat}, Longitude: ${lon}<br>
+                <a href="${gmap}" target="_blank" rel="noopener">View on Google Maps</a>
+                &nbsp;|&nbsp;
+                <a href="${amap}" target="_blank" rel="noopener">View on Apple Maps</a>`;
         }, function(err) {
             geoOut.textContent = "Location access denied or unavailable.";
         });
@@ -523,6 +531,7 @@ function getGeo() {
         geoOut.textContent = "Geolocation not supported in this browser.";
     }
 }
+
 
 /* ========== LOG DOWNLOAD (CSV) ========== */
 function downloadLog() {
