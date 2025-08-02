@@ -288,6 +288,8 @@ button:hover { background: #1c4187; }
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/mgrs.js"></script>
 <script>
 /* ========== THEME TOGGLE ========== */
 function setTheme(mode) {
@@ -520,12 +522,20 @@ function getGeo() {
     geoOut.textContent = "Requesting location...";
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(pos) {
-            let lat = pos.coords.latitude.toFixed(6);
-            let lon = pos.coords.longitude.toFixed(6);
-            let gmap = `https://maps.google.com/?q=${lat},${lon}`;
-            let amap = `https://maps.apple.com/?ll=${lat},${lon}`;
+            let lat = pos.coords.latitude;
+            let lon = pos.coords.longitude;
+            let latFixed = lat.toFixed(6);
+            let lonFixed = lon.toFixed(6);
+            let gmap = `https://maps.google.com/?q=${latFixed},${lonFixed}`;
+            let amap = `https://maps.apple.com/?ll=${latFixed},${lonFixed}`;
+            // Convert to MGRS
+            let mgrsCoord = (typeof mgrs !== "undefined")
+                ? mgrs.forward([lon, lat], 5) // 5-digit accuracy
+                : "MGRS unavailable";
             geoOut.innerHTML =
-                `Latitude: ${lat}, Longitude: ${lon}<br>
+                `Latitude: ${latFixed}<br>
+                Longitude: ${lonFixed}<br>
+                MGRS: <span style="font-family:monospace">${mgrsCoord}</span><br>
                 <a href="${gmap}" target="_blank" rel="noopener">View on Google Maps</a>
                 &nbsp;|&nbsp;
                 <a href="${amap}" target="_blank" rel="noopener">View on Apple Maps</a>`;
@@ -536,7 +546,6 @@ function getGeo() {
         geoOut.textContent = "Geolocation not supported in this browser.";
     }
 }
-
 
 /* ========== LOG DOWNLOAD (CSV) ========== */
 function downloadLog() {
