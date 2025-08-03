@@ -267,7 +267,14 @@ button:hover { background: #1c4187; }
     <button id="advanced-toggle" onclick="toggleAdvanced()">Show Advanced Tools ⬇️</button>
     <div id="advanced-section">
         <!-- Theme toggle here -->
-        <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+        <div class="theme-switch-wrap">
+  <label class="theme-switch">
+    <input type="checkbox" id="theme-toggle">
+    <span class="slider"></span>
+    <span class="theme-label" id="theme-label">Light Mode</span>
+  </label>
+</div>
+
         <!-- Diagnostic panel -->
         <div id="diagnostic-panel">
             <h3>Diagnostics</h3>
