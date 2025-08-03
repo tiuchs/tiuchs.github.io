@@ -502,15 +502,15 @@ function toggleAdvanced() {
 function runSpeedTest() {
     let speedOut = document.getElementById("speed-out");
     speedOut.textContent = "Testing...";
-    // Uses a small file from Google. Can be replaced with other static files.
-    let testUrl = "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
-    let sizeBytes = 13504; // Approximate size of the image in bytes (update if using a different file)
+    // Use a larger file for accuracy (here: 10MB test file)
+    let testUrl = "https://www.thinkbroadband.com/download/10MB.zip";
+    let sizeBytes = 10 * 1024 * 1024; // 10MB in bytes
     let start = Date.now();
     fetch(testUrl + "?cachebust=" + Math.random(), { mode: 'no-cors' }).then(() => {
         let duration = (Date.now() - start) / 1000;
         let bitsLoaded = sizeBytes * 8;
         let speedMbps = (bitsLoaded / duration / 1024 / 1024).toFixed(2);
-        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps`;
+        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps (10MB file)`;
     }).catch(() => {
         speedOut.textContent = "Speed test failed (maybe offline)";
     });
