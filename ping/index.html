@@ -232,11 +232,69 @@ button:hover { background: #1c4187; }
 }
 #banner.offline { background: #fa6767; color: #fff; border: 2px solid #c03232;}
 #banner.online { background: #41e677; color: #111; border: 2px solid #238142;}
+.theme-switch-wrap {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5em;
+  margin-top: 0.5em;
+}
+.theme-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  cursor: pointer;
+  user-select: none;
+}
+.theme-switch input {
+  display: none;
+}
+.theme-switch .slider {
+  width: 42px;
+  height: 24px;
+  background: #ccc;
+  border-radius: 34px;
+  position: relative;
+  transition: background 0.2s;
+  display: inline-block;
+}
+.theme-switch .slider:before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+}
+.theme-switch input:checked + .slider {
+  background: #2967d0;
+}
+.theme-switch input:checked + .slider:before {
+  transform: translateX(18px);
+  background: #fffde4;
+}
+.theme-switch .theme-label {
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 88px;
+}
+
 </style>
 </head>
 <body>
 <div id="banner"></div>
-<button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">🌙</button>
+<div class="theme-switch-wrap">
+  <label class="theme-switch">
+    <input type="checkbox" id="theme-toggle">
+    <span class="slider"></span>
+    <span class="theme-label" id="theme-label">Light Mode</span>
+  </label>
+</div>
+
 <div class="card">
     <div class="logo-wrap">
         <img src="logo.png" alt="Logo">
@@ -297,11 +355,26 @@ button:hover { background: #1c4187; }
 function setTheme(mode) {
     document.body.setAttribute('data-theme', mode);
     localStorage.setItem('theme', mode);
-    document.getElementById("theme-toggle").textContent = (mode === 'dark') ? '☀️' : '🌙';
+    // Set the toggle position and label
+    let themeToggle = document.getElementById("theme-toggle");
+    let themeLabel = document.getElementById("theme-label");
+    if(mode === 'dark') {
+        themeToggle.checked = true;
+        themeLabel.textContent = "Dark Mode";
+    } else {
+        themeToggle.checked = false;
+        themeLabel.textContent = "Light Mode";
+    }
 }
-document.getElementById("theme-toggle").onclick = function() {
-    setTheme(document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+document.getElementById("theme-toggle").onchange = function() {
+    setTheme(this.checked ? 'dark' : 'light');
 };
+
+(function() {
+    let userPref = localStorage.getItem('theme');
+    setTheme(userPref || (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light'));
+})();
 (function() {
     let userPref = localStorage.getItem('theme');
     setTheme(userPref || (window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light'));
