@@ -287,14 +287,6 @@ button:hover { background: #1c4187; }
 </head>
 <body>
 <div id="banner"></div>
-<div class="theme-switch-wrap">
-  <label class="theme-switch">
-    <input type="checkbox" id="theme-toggle">
-    <span class="slider"></span>
-    <span class="theme-label" id="theme-label">Light Mode</span>
-  </label>
-</div>
-
 <div class="card">
     <div class="logo-wrap">
         <img src="logo.png" alt="Logo">
@@ -325,6 +317,14 @@ button:hover { background: #1c4187; }
         <button onclick="PingAll();">Check Now</button>
     </div>
     <div id="updated"></div>
+         <!-- Theme toggle here -->
+        <div class="theme-switch-wrap">
+  <label class="theme-switch">
+    <input type="checkbox" id="theme-toggle">
+    <span class="slider"></span>
+    <span class="theme-label" id="theme-label">Light Mode</span>
+  </label>
+</div>
     <div id="diagnostic-panel">
         <h3>Diagnostics</h3>
         <div><strong>Browser:</strong> <span id="browser-info"></span></div>
