@@ -278,7 +278,12 @@ button:hover { background: #1c4187; }
             <div><strong>Uptime:</strong> <span id="uptime"></span></div>
         </div>
         <div id="speed-test-result">
-            <button onclick="runSpeedTest()">Run Speed Test</button>
+            <select id="speed-size">
+  <option value="5">5 MB</option>
+  <option value="10" selected>10 MB</option>
+  <option value="20">20 MB</option>
+</select>
+<button onclick="runSpeedTest()">Run Speed Test</button>
             <div id="speed-out"></div>
         </div>
         <div id="geo-info">
@@ -499,18 +504,18 @@ function toggleAdvanced() {
 }
 
 /* ========== SPEED TEST (BASIC) ========== */
-function runSpeedTest() {
+ffunction runSpeedTest() {
     let speedOut = document.getElementById("speed-out");
     speedOut.textContent = "Testing...";
-    // Use a larger file for accuracy (here: 10MB test file)
-    let testUrl = "https://www.thinkbroadband.com/download/10MB.zip";
-    let sizeBytes = 10 * 1024 * 1024; // 10MB in bytes
+    let sizeMB = document.getElementById("speed-size").value;
+    let testUrl = `https://www.thinkbroadband.com/download/${sizeMB}MB.zip`;
+    let sizeBytes = sizeMB * 1024 * 1024;
     let start = Date.now();
     fetch(testUrl + "?cachebust=" + Math.random(), { mode: 'no-cors' }).then(() => {
         let duration = (Date.now() - start) / 1000;
         let bitsLoaded = sizeBytes * 8;
         let speedMbps = (bitsLoaded / duration / 1024 / 1024).toFixed(2);
-        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps (10MB file)`;
+        speedOut.textContent = `Estimated Download Speed: ${speedMbps} Mbps (${sizeMB}MB file)`;
     }).catch(() => {
         speedOut.textContent = "Speed test failed (maybe offline)";
     });
