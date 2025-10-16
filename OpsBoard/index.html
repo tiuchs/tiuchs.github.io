@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ops Display Board – Weather & NOTAMs</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2b;
+      --panel-2: #0f1726;
+      --text: #e8eef9;
+      --muted: #a9b4c7;
+      --accent: #79c0ff;
+      --good: #2fbf71;
+      --warn: #f0b429;
+      --bad: #f05454;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, var(--bg), #0a1020 60%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-areas:
+        "hero side"
+        "metar side"
+        "notam side";
+    }
+    @media (max-width: 1100px) {
+      .wrap {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "hero"
+          "side"
+          "metar"
+          "notam";
+      }
+    }
+    .panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    .panel h2 {
+      margin: 0;
+      padding: 12px 16px;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+    }
+    .hero { grid-area: hero; min-height: 380px; display: flex; flex-direction: column; }
+    .hero .content { flex: 1; }
+    .iframe-box { position: relative; width: 100%; height: 100%; min-height: 300px; }
+    .iframe-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    .side { grid-area: side; display: grid; gap: 16px; }
+
+    .metar { grid-area: metar; }
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    th { position: sticky; top: 0; background: rgba(15,23,38,0.9); backdrop-filter: blur(6px); font-weight: 600; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    .pill { padding: 3px 8px; border-radius: 999px; font-size: 12px; display: inline-block; }
+    .vfr { background: rgba(47,191,113,0.15); color: var(--good); border: 1px solid rgba(47,191,113,0.35); }
+    .mvfr { background: rgba(240,180,41,0.15); color: var(--warn); border: 1px solid rgba(240,180,41,0.35); }
+    .ifr { background: rgba(240,84,84,0.15); color: var(--bad); border: 1px solid rgba(240,84,84,0.35); }
+    .lifr { background: rgba(130,84,240,0.15); color: #c69cff; border: 1px solid rgba(130,84,240,0.35); }
+
+    .notam { grid-area: notam; }
+    details { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    details > summary { cursor: pointer; padding: 12px 16px; list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] > summary { background: rgba(255,255,255,0.03); }
+    .notam-body { padding: 0 16px 12px 16px; white-space: pre-wrap; color: var(--muted); }
+
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+    .bar button { background: #1b2944; color: var(--text); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+    .bar button:hover { background: #223155; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="panel hero">
+      <h2>WeatherStar Live</h2>
+      <div class="content iframe-box">
+        <iframe src="https://weatherstar.bnttech.me" title="WeatherStar"></iframe>
+      </div>
+      <div class="bar">
+        <div>
+          KHLR focus. Auto refresh every 5 minutes. Data from AWC ADDS.
+        </div>
+        <div>
+          <button id="refreshBtn" title="Refresh now">Refresh</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel" style="min-height:200px">
+        <h2>Quick Status</h2>
+        <div id="quick" style="padding:12px 16px; font-size:14px; color:var(--muted)">
+          Loading station and NOTAM status.
+        </div>
+      </section>
+      <section class="panel" style="min-height:200px">
+        <h2>Clock</h2>
+        <div id="clock" style="padding:16px; font-size:32px; font-variant-numeric: tabular-nums"></div>
+      </section>
+    </aside>
+
+    <section class="panel metar">
+      <h2>METARs – KHLR plus 10 within 50 NM</h2>
+      <div class="table-wrap">
+        <table id="metarTable" aria-label="METAR table">
+          <thead>
+            <tr>
+              <th>ICAO</th>
+              <th>Distance NM</th>
+              <th>Time (Z)</th>
+              <th>Flight</th>
+              <th>Wind</th>
+              <th>Vis</th>
+              <th>Ceiling</th>
+              <th>Temp/Dew</th>
+              <th>Alt</th>
+              <th>METAR</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="bar"><span id="metarStatus">Loading METARs.</span></div>
+    </section>
+
+    <section class="panel notam">
+      <h2>NOTAMs – KHLR</h2>
+      <div id="notams"></div>
+      <div class="bar"><span id="notamStatus">Loading NOTAMs.</span></div>
+    </section>
+  </div>
+
+  <script>
+    const ADDS = "https://aviationweather.gov/adds/dataserver_current/httpparam";
+
+    const state = {
+      khlr: { icao: "KHLR", lat: null, lon: null },
+      stations: [],
+      metars: [],
+      notams: []
+    };
+
+    function fmtZulu(dtStr) {
+      if (!dtStr) return "";
+      const d = new Date(dtStr);
+      return d.toISOString().replace("T", " ").replace(":00.000Z", "Z");
+    }
+
+    function toRad(x) { return x * Math.PI / 180; }
+    function haversineNM(lat1, lon1, lat2, lon2) {
+      const Rnm = 3440.065; // nautical miles
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return Rnm * c;
+    }
+
+    function flightCat(row) {
+      const fc = row.flight_category || "";
+      const cls = fc === "VFR" ? "vfr" : fc === "MVFR" ? "mvfr" : fc === "IFR" ? "ifr" : fc === "LIFR" ? "lifr" : "";
+      return `<span class="pill ${cls}">${fc || ""}</span>`;
+    }
+
+    function ceiling(row) {
+      const sk = row.sky_condition || [];
+      const layers = Array.isArray(sk) ? sk : [sk];
+      const bknOvc = layers.filter(l => ["BKN","OVC"].includes(l["@_sky_cover"]))
+                            .map(l => parseInt(l["@_cloud_base_ft_agl"])||null)
+                            .filter(Boolean);
+      if (bknOvc.length === 0) return "";
+      const min = Math.min(...bknOvc);
+      return `${min} ft`;
+    }
+
+    function windStr(row) {
+      const dir = row.wind_dir_degrees; const spd = row.wind_speed_kt; const gst = row.wind_gust_kt;
+      if (dir == null || spd == null) return "";
+      return `${String(dir).padStart(3,"0")}@${spd}kt${gst?` G${gst}`:""}`;
+    }
+
+    function tempDew(row) {
+      const t = row.temp_c; const d = row.dewpoint_c;
+      if (t == null) return "";
+      return `${t}C${d!=null?`/${d}C`:""}`;
+    }
+
+    function altim(row) {
+      const a = row.altim_in_hg; return a!=null ? `${a} inHg` : "";
+    }
+
+    async function fetchJSON(url) {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    async function loadKHLRStation() {
+      const url = `${ADDS}?dataSource=stations&requestType=retrieve&format=JSON&stationString=KHLR`;
+      const j = await fetchJSON(url);
+      const s = j?.response?.data?.Station?.[0];
+      if (!s) throw new Error("KHLR station not found");
+      state.khlr.lat = parseFloat(s.latitude);
+      state.khlr.lon = parseFloat(s.longitude);
+      return state.khlr;
+    }
+
+    async function loadMETARs() {
+      // 50 NM is about 57.5 statute miles. Use 58 to be safe with ADDS which uses SM for radialDistance.
+      const lat = state.khlr.lat; const lon = state.khlr.lon;
+      const url = `${ADDS}?dataSource=metars&requestType=retrieve&format=JSON&radialDistance=58;${lat},${lon}&hoursBeforeNow=3`;
+      const j = await fetchJSON(url);
+      const arr = j?.response?.data?.METAR || [];
+      // Compute distance and keep unique by station with most recent time
+      const byIcao = new Map();
+      for (const m of arr) {
+        const icao = m.station_id;
+        if (!icao) continue;
+        const la = parseFloat(m.latitude);
+        const lo = parseFloat(m.longitude);
+        const dist = (isFinite(la) && isFinite(lo)) ? haversineNM(state.khlr.lat, state.khlr.lon, la, lo) : 9999;
+        m._dist_nm = dist;
+        const t = Date.parse(m.observation_time || 0);
+        const prev = byIcao.get(icao);
+        if (!prev || Date.parse(prev.observation_time||0) < t) byIcao.set(icao, m);
+      }
+      const list = Array.from(byIcao.values())
+        .filter(m => m._dist_nm <= 50.5) // cap to 50 NM window
+        .sort((a,b) => (a.station_id === 'KHLR' ? -1 : b.station_id === 'KHLR' ? 1 : a._dist_nm - b._dist_nm));
+      // Ensure KHLR present if missing
+      const hasKHLR = list.some(x => x.station_id === 'KHLR');
+      if (!hasKHLR) {
+        const khlrOnlyUrl = `${ADDS}?dataSource=metars&requestType=retrieve&format=JSON&stationString=KHLR&hoursBeforeNow=6`;
+        const kj = await fetchJSON(khlrOnlyUrl);
+        const km = kj?.response?.data?.METAR?.[0];
+        if (km) { km._dist_nm = 0; list.unshift(km); }
+      }
+      // Limit to KHLR + nearest 10 others
+      const picked = [];
+      const others = [];
+      for (const m of list) {
+        if (m.station_id === 'KHLR') picked.push(m);
+        else others.push(m);
+      }
+      picked.push(...others.slice(0, 10));
+      state.metars = picked;
+    }
+
+    function renderMETARs() {
+      const tbody = document.querySelector('#metarTable tbody');
+      tbody.innerHTML = '';
+      for (const m of state.metars) {
+        const tr = document.createElement('tr');
+        const t = new Date(m.observation_time);
+        const vis = m.visibility_statute_mi ? `${m.visibility_statute_mi} SM` : '';
+        tr.innerHTML = `
+          <td><strong>${m.station_id || ''}</strong></td>
+          <td>${m._dist_nm ? m._dist_nm.toFixed(1) : ''}</td>
+          <td>${t.toISOString().slice(11,16)}Z</td>
+          <td>${flightCat(m)}</td>
+          <td>${windStr(m)}</td>
+          <td>${vis}</td>
+          <td>${ceiling(m) || ''}</td>
+          <td>${tempDew(m)}</td>
+          <td>${altim(m)}</td>
+          <td title="${m.raw_text || ''}">${(m.raw_text || '').slice(0,64)}${(m.raw_text||'').length>64?'…':''}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('metarStatus').textContent = `Loaded ${state.metars.length} reports.`;
+    }
+
+    async function loadNOTAMs() {
+      // AWC NOTAM API via ADDS products
+      // Use KHLR ICAO. Filter recent and active.
+      // Endpoint documented to support notams via the "notams" dataSource.
+      const url = `${ADDS}?dataSource=notams&requestType=retrieve&format=JSON&location=KHLR`;
+      const j = await fetchJSON(url);
+      const arr = j?.response?.data?.NOTAM ?? [];
+      // Normalize to recent first
+      arr.sort((a,b) => Date.parse(b.issue_date||0) - Date.parse(a.issue_date||0));
+      state.notams = arr;
+    }
+
+    function renderNOTAMs() {
+      const box = document.getElementById('notams');
+      box.innerHTML = '';
+      if (!state.notams.length) {
+        document.getElementById('notamStatus').textContent = 'No NOTAMs found.';
+        return;
+      }
+      for (const n of state.notams) {
+        const id = n.notam_id || n.notam_number || 'NOTAM';
+        const sum = document.createElement('details');
+        const s = document.createElement('summary');
+        const issued = fmtZulu(n.issue_date);
+        const endt = fmtZulu(n.end_date_time || n.expiration || "");
+        s.textContent = `${id}  Issued ${issued}${endt?`  Ends ${endt}`:''}`;
+        const body = document.createElement('div');
+        body.className = 'notam-body';
+        body.textContent = n.all || n.text || n.notam_text || JSON.stringify(n, null, 2);
+        sum.appendChild(s);
+        sum.appendChild(body);
+        sum.appendChild(body);
+        sum.appendChild(body);
+        // Actually need details > summary + div, correct nesting:
+        sum.replaceChildren(s);
+        const details = document.createElement('details');
+        details.appendChild(s);
+        details.appendChild(body);
+        box.appendChild(details);
+      }
+      document.getElementById('notamStatus').textContent = `Loaded ${state.notams.length} NOTAMs.`;
+    }
+
+    function renderQuick() {
+      const k = state.khlr;
+      const near = state.metars.filter(x => x.station_id !== 'KHLR').slice(0,3).map(x => x.station_id).join(', ');
+      const notamCount = state.notams.length;
+      document.getElementById('quick').textContent = `KHLR at ${new Date().toUTCString()}. Nearby: ${near}. NOTAMs: ${notamCount}.`;
+    }
+
+    async function refreshAll() {
+      try {
+        document.getElementById('metarStatus').textContent = 'Loading METARs.';
+        document.getElementById('notamStatus').textContent = 'Loading NOTAMs.';
+        await loadKHLRStation();
+        await loadMETARs();
+        renderMETARs();
+        await loadNOTAMs();
+        renderNOTAMs();
+        renderQuick();
+      } catch (e) {
+        document.getElementById('metarStatus').textContent = `Error loading data. ${e.message}`;
+      }
+    }
+
+    function startClock() {
+      const el = document.getElementById('clock');
+      function tick() {
+        const now = new Date();
+        const z = now.toISOString().slice(11,19) + ' Z';
+        el.textContent = z;
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+
+    startClock();
+    refreshAll();
+    setInterval(refreshAll, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
