@@ -34,40 +34,18 @@
       grid-template-areas:
         "hero side"
         "metar side"
-        "notam side";
+        "notam tests";
     }
     @media (max-width: 1100px) {
-      .wrap {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-          "hero"
-          "side"
-          "metar"
-          "notam";
-      }
+      .wrap { grid-template-columns: 1fr; grid-template-areas: "hero" "side" "metar" "notam" "tests"; }
     }
-    .panel {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-      overflow: hidden;
-    }
-    .panel h2 {
-      margin: 0;
-      padding: 12px 16px;
-      font-size: 18px;
-      letter-spacing: 0.2px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.03);
-    }
+    .panel { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); overflow: hidden; }
+    .panel h2 { margin: 0; padding: 12px 16px; font-size: 18px; letter-spacing: 0.2px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
     .hero { grid-area: hero; min-height: 380px; display: flex; flex-direction: column; }
     .hero .content { flex: 1; }
     .iframe-box { position: relative; width: 100%; height: 100%; min-height: 300px; }
     .iframe-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-
     .side { grid-area: side; display: grid; gap: 16px; }
-
     .metar { grid-area: metar; }
     .table-wrap { overflow: auto; }
     table { width: 100%; border-collapse: collapse; }
@@ -79,17 +57,19 @@
     .mvfr { background: rgba(240,180,41,0.15); color: var(--warn); border: 1px solid rgba(240,180,41,0.35); }
     .ifr { background: rgba(240,84,84,0.15); color: var(--bad); border: 1px solid rgba(240,84,84,0.35); }
     .lifr { background: rgba(130,84,240,0.15); color: #c69cff; border: 1px solid rgba(130,84,240,0.35); }
-
     .notam { grid-area: notam; }
     details { border-bottom: 1px solid rgba(255,255,255,0.08); }
     details > summary { cursor: pointer; padding: 12px 16px; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
     details[open] > summary { background: rgba(255,255,255,0.03); }
     .notam-body { padding: 0 16px 12px 16px; white-space: pre-wrap; color: var(--muted); }
-
     .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
     .bar button { background: #1b2944; color: var(--text); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
     .bar button:hover { background: #223155; }
+    .tests { grid-area: tests; }
+    .test-pass { color: var(--good); }
+    .test-fail { color: var(--bad); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
   </style>
 </head>
 <body>
@@ -100,21 +80,15 @@
         <iframe src="https://weatherstar.bnttech.me" title="WeatherStar"></iframe>
       </div>
       <div class="bar">
-        <div>
-          KHLR focus. Auto refresh every 5 minutes. Data from AWC ADDS.
-        </div>
-        <div>
-          <button id="refreshBtn" title="Refresh now">Refresh</button>
-        </div>
+        <div>Focus KHLR. Auto refresh 5 minutes. Data via proxy to AWC API.</div>
+        <div><button id="refreshBtn" title="Refresh now">Refresh</button></div>
       </div>
     </section>
 
     <aside class="side">
       <section class="panel" style="min-height:200px">
         <h2>Quick Status</h2>
-        <div id="quick" style="padding:12px 16px; font-size:14px; color:var(--muted)">
-          Loading station and NOTAM status.
-        </div>
+        <div id="quick" style="padding:12px 16px; font-size:14px; color:var(--muted)">Loading station and NOTAM status.</div>
       </section>
       <section class="panel" style="min-height:200px">
         <h2>Clock</h2>
@@ -151,14 +125,26 @@
       <div id="notams"></div>
       <div class="bar"><span id="notamStatus">Loading NOTAMs.</span></div>
     </section>
+
+    <section class="panel tests">
+      <h2>Diagnostics</h2>
+      <div id="diag" style="padding:12px 16px; color:var(--muted)">Running self tests.</div>
+      <div class="table-wrap">
+        <table id="testTable">
+          <thead><tr><th>Test</th><th>Result</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
   <script>
-    const ADDS = "https://aviationweather.gov/adds/dataserver_current/httpparam";
+    // API endpoints through a same-origin proxy
+    const AWC_API = "https://aviationweather.gov/api/data"; // /airport, /metar
+    const PROXY_BASE = "/proxy"; // configure on your server
 
     const state = {
       khlr: { icao: "KHLR", lat: null, lon: null },
-      stations: [],
       metars: [],
       notams: []
     };
@@ -171,99 +157,95 @@
 
     function toRad(x) { return x * Math.PI / 180; }
     function haversineNM(lat1, lon1, lat2, lon2) {
-      const Rnm = 3440.065; // nautical miles
+      const Rnm = 3440.065;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return Rnm * c;
     }
 
     function flightCat(row) {
-      const fc = row.flight_category || "";
+      const fc = row.fltCat || row.flight_category || "";
       const cls = fc === "VFR" ? "vfr" : fc === "MVFR" ? "mvfr" : fc === "IFR" ? "ifr" : fc === "LIFR" ? "lifr" : "";
       return `<span class="pill ${cls}">${fc || ""}</span>`;
     }
 
     function ceiling(row) {
-      const sk = row.sky_condition || [];
-      const layers = Array.isArray(sk) ? sk : [sk];
-      const bknOvc = layers.filter(l => ["BKN","OVC"].includes(l["@_sky_cover"]))
-                            .map(l => parseInt(l["@_cloud_base_ft_agl"])||null)
-                            .filter(Boolean);
-      if (bknOvc.length === 0) return "";
-      const min = Math.min(...bknOvc);
-      return `${min} ft`;
+      const clouds = row.clouds || row.sky_condition || [];
+      const layers = Array.isArray(clouds) ? clouds : [clouds];
+      const getCover = c => c.cover || c["@_sky_cover"];
+      const getBase = c => c.base || parseInt(c["@_cloud_base_ft_agl"]) || null;
+      const bknOvc = layers.filter(l => ["BKN","OVC","OVX"].includes(getCover(l)))
+                           .map(getBase).filter(v => Number.isFinite(v));
+      if (!bknOvc.length) return "";
+      return `${Math.min(...bknOvc)} ft`;
     }
 
     function windStr(row) {
-      const dir = row.wind_dir_degrees; const spd = row.wind_speed_kt; const gst = row.wind_gust_kt;
+      const dir = row.windDir ?? row.wind_dir_degrees;
+      const spd = row.windSpeedKt ?? row.wind_speed_kt;
+      const gst = row.windGustKt ?? row.wind_gust_kt;
       if (dir == null || spd == null) return "";
-      return `${String(dir).padStart(3,"0")}@${spd}kt${gst?` G${gst}`:""}`;
+      return `${String(dir).padStart(3, "0")}@${spd}kt${gst ? ` G${gst}` : ""}`;
     }
 
     function tempDew(row) {
-      const t = row.temp_c; const d = row.dewpoint_c;
+      const t = row.temp ?? row.temp_c;
+      const d = row.dewpoint ?? row.dewpoint_c;
       if (t == null) return "";
-      return `${t}C${d!=null?`/${d}C`:""}`;
+      return `${t}C${d != null ? `/${d}C` : ""}`;
     }
 
     function altim(row) {
-      const a = row.altim_in_hg; return a!=null ? `${a} inHg` : "";
+      const a = row.altimHg ?? row.altim_in_hg;
+      return a != null ? `${a} inHg` : "";
     }
 
     async function fetchJSON(url) {
-      const r = await fetch(url, { cache: "no-store" });
+      const r = await fetch(url, { cache: "no-store", headers: { "x-user-agent": "ops-display/1.0" } });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     }
 
     async function loadKHLRStation() {
-      const url = `${ADDS}?dataSource=stations&requestType=retrieve&format=JSON&stationString=KHLR`;
+      const url = `${PROXY_BASE}${AWC_API}/airport?ids=KHLR&format=json`;
       const j = await fetchJSON(url);
-      const s = j?.response?.data?.Station?.[0];
-      if (!s) throw new Error("KHLR station not found");
-      state.khlr.lat = parseFloat(s.latitude);
-      state.khlr.lon = parseFloat(s.longitude);
+      const s = j?.data?.[0];
+      if (!s) throw new Error("KHLR airport not found");
+      state.khlr.lat = parseFloat(s.lat);
+      state.khlr.lon = parseFloat(s.lon);
       return state.khlr;
     }
 
     async function loadMETARs() {
-      // 50 NM is about 57.5 statute miles. Use 58 to be safe with ADDS which uses SM for radialDistance.
       const lat = state.khlr.lat; const lon = state.khlr.lon;
-      const url = `${ADDS}?dataSource=metars&requestType=retrieve&format=JSON&radialDistance=58;${lat},${lon}&hoursBeforeNow=3`;
+      const dLat = 50 / 60;
+      const dLon = 50 / (60 * Math.cos(toRad(lat)));
+      const box = `${(lat - dLat).toFixed(4)},${(lon - dLon).toFixed(4)},${(lat + dLat).toFixed(4)},${(lon + dLon).toFixed(4)}`;
+      const url = `${PROXY_BASE}${AWC_API}/metar?bbox=${box}&hours=3&format=json`;
       const j = await fetchJSON(url);
-      const arr = j?.response?.data?.METAR || [];
-      // Compute distance and keep unique by station with most recent time
+      const arr = j?.data || [];
       const byIcao = new Map();
       for (const m of arr) {
-        const icao = m.station_id;
+        const icao = m.icaoId || m.station || m.id || m.stationId;
         if (!icao) continue;
-        const la = parseFloat(m.latitude);
-        const lo = parseFloat(m.longitude);
-        const dist = (isFinite(la) && isFinite(lo)) ? haversineNM(state.khlr.lat, state.khlr.lon, la, lo) : 9999;
+        const la = parseFloat(m.lat ?? m.latitude ?? m.latDegrees);
+        const lo = parseFloat(m.lon ?? m.longitude ?? m.lonDegrees);
+        const dist = Number.isFinite(la) && Number.isFinite(lo) ? haversineNM(state.khlr.lat, state.khlr.lon, la, lo) : 9999;
         m._dist_nm = dist;
-        const t = Date.parse(m.observation_time || 0);
+        const t = Date.parse(m.obsTime || m.time || m.observed || m.issueTime || 0);
         const prev = byIcao.get(icao);
-        if (!prev || Date.parse(prev.observation_time||0) < t) byIcao.set(icao, m);
+        if (!prev || Date.parse(prev.obsTime || prev.time || prev.observed || prev.issueTime || 0) < t) byIcao.set(icao, m);
       }
       const list = Array.from(byIcao.values())
-        .filter(m => m._dist_nm <= 50.5) // cap to 50 NM window
-        .sort((a,b) => (a.station_id === 'KHLR' ? -1 : b.station_id === 'KHLR' ? 1 : a._dist_nm - b._dist_nm));
-      // Ensure KHLR present if missing
-      const hasKHLR = list.some(x => x.station_id === 'KHLR');
-      if (!hasKHLR) {
-        const khlrOnlyUrl = `${ADDS}?dataSource=metars&requestType=retrieve&format=JSON&stationString=KHLR&hoursBeforeNow=6`;
-        const kj = await fetchJSON(khlrOnlyUrl);
-        const km = kj?.response?.data?.METAR?.[0];
-        if (km) { km._dist_nm = 0; list.unshift(km); }
-      }
-      // Limit to KHLR + nearest 10 others
+        .filter(m => m._dist_nm <= 50.5)
+        .sort((a,b) => ( (a.icaoId||a.stationId||a.station)==='KHLR' ? -1 : ( (b.icaoId||b.stationId||b.station)==='KHLR' ? 1 : a._dist_nm - b._dist_nm)));
       const picked = [];
       const others = [];
       for (const m of list) {
-        if (m.station_id === 'KHLR') picked.push(m);
-        else others.push(m);
+        const id = m.icaoId || m.station || m.id || m.stationId;
+        if (id === 'KHLR') picked.push(m); else others.push(m);
       }
       picked.push(...others.slice(0, 10));
       state.metars = picked;
@@ -273,35 +255,34 @@
       const tbody = document.querySelector('#metarTable tbody');
       tbody.innerHTML = '';
       for (const m of state.metars) {
+        const id = m.icaoId || m.station || m.id || m.stationId || '';
+        const t = new Date(m.obsTime || m.time || m.observed || m.issueTime || '');
+        const vis = m.visibility ?? m.visibility_statute_mi;
+        const visStr = vis != null ? `${vis} SM` : '';
+        const raw = m.rawOb ?? m.raw_text ?? '';
         const tr = document.createElement('tr');
-        const t = new Date(m.observation_time);
-        const vis = m.visibility_statute_mi ? `${m.visibility_statute_mi} SM` : '';
         tr.innerHTML = `
-          <td><strong>${m.station_id || ''}</strong></td>
+          <td><strong>${id}</strong></td>
           <td>${m._dist_nm ? m._dist_nm.toFixed(1) : ''}</td>
-          <td>${t.toISOString().slice(11,16)}Z</td>
+          <td>${isFinite(t.getTime()) ? t.toISOString().slice(11,16)+'Z' : ''}</td>
           <td>${flightCat(m)}</td>
           <td>${windStr(m)}</td>
-          <td>${vis}</td>
+          <td>${visStr}</td>
           <td>${ceiling(m) || ''}</td>
           <td>${tempDew(m)}</td>
           <td>${altim(m)}</td>
-          <td title="${m.raw_text || ''}">${(m.raw_text || '').slice(0,64)}${(m.raw_text||'').length>64?'…':''}</td>
-        `;
+          <td title="${raw}">${raw.slice(0,64)}${raw.length>64?'…':''}</td>`;
         tbody.appendChild(tr);
       }
       document.getElementById('metarStatus').textContent = `Loaded ${state.metars.length} reports.`;
     }
 
     async function loadNOTAMs() {
-      // AWC NOTAM API via ADDS products
-      // Use KHLR ICAO. Filter recent and active.
-      // Endpoint documented to support notams via the "notams" dataSource.
-      const url = `${ADDS}?dataSource=notams&requestType=retrieve&format=JSON&location=KHLR`;
+      // Your backend should forward to FAA NOTAM API with credentials
+      const url = `${PROXY_BASE}/faa/notams?location=KHLR`;
       const j = await fetchJSON(url);
-      const arr = j?.response?.data?.NOTAM ?? [];
-      // Normalize to recent first
-      arr.sort((a,b) => Date.parse(b.issue_date||0) - Date.parse(a.issue_date||0));
+      const arr = j?.notams || j?.data || j || [];
+      arr.sort((a,b) => Date.parse(b.issued || b.issue_date || 0) - Date.parse(a.issued || a.issue_date || 0));
       state.notams = arr;
     }
 
@@ -313,23 +294,16 @@
         return;
       }
       for (const n of state.notams) {
-        const id = n.notam_id || n.notam_number || 'NOTAM';
-        const sum = document.createElement('details');
-        const s = document.createElement('summary');
-        const issued = fmtZulu(n.issue_date);
-        const endt = fmtZulu(n.end_date_time || n.expiration || "");
-        s.textContent = `${id}  Issued ${issued}${endt?`  Ends ${endt}`:''}`;
+        const id = n.number || n.notam_id || n.notam_number || 'NOTAM';
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        const issued = fmtZulu(n.issued || n.issue_date);
+        const endt = fmtZulu(n.end || n.end_date_time || n.expiration);
+        summary.textContent = `${id}  Issued ${issued}${endt?`  Ends ${endt}`:''}`;
         const body = document.createElement('div');
         body.className = 'notam-body';
-        body.textContent = n.all || n.text || n.notam_text || JSON.stringify(n, null, 2);
-        sum.appendChild(s);
-        sum.appendChild(body);
-        sum.appendChild(body);
-        sum.appendChild(body);
-        // Actually need details > summary + div, correct nesting:
-        sum.replaceChildren(s);
-        const details = document.createElement('details');
-        details.appendChild(s);
+        body.textContent = n.text || n.all || n.notam_text || JSON.stringify(n, null, 2);
+        details.appendChild(summary);
         details.appendChild(body);
         box.appendChild(details);
       }
@@ -337,8 +311,7 @@
     }
 
     function renderQuick() {
-      const k = state.khlr;
-      const near = state.metars.filter(x => x.station_id !== 'KHLR').slice(0,3).map(x => x.station_id).join(', ');
+      const near = state.metars.filter(x => (x.icaoId||x.stationId||x.station) !== 'KHLR').slice(0,3).map(x => x.icaoId||x.stationId||x.station).join(', ');
       const notamCount = state.notams.length;
       document.getElementById('quick').textContent = `KHLR at ${new Date().toUTCString()}. Nearby: ${near}. NOTAMs: ${notamCount}.`;
     }
@@ -369,11 +342,60 @@
       setInterval(tick, 1000);
     }
 
-    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+    // Simple self tests
+    function addTest(name, pass, detail='') {
+      const tbody = document.querySelector('#testTable tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${name}</td><td class="${pass?'test-pass':'test-fail'}">${pass?'PASS':'FAIL'} ${detail?`- ${detail}:`:''}</td>`;
+      tbody.appendChild(tr);
+    }
 
+    function runTests() {
+      document.querySelector('#testTable tbody').innerHTML = '';
+      try {
+        const d = haversineNM(0,0,1,0); // ~60 NM per degree lat
+        addTest('haversine 1° lat', Math.abs(d - 60) < 2, `got ${d.toFixed(2)}`);
+      } catch (e) { addTest('haversine throws', false, e.message); }
+
+      try {
+        const fc = flightCat({ fltCat: 'VFR' });
+        addTest('flightCat VFR tag', /class="pill vfr">VFR<\/span>/.test(fc), fc);
+      } catch (e) { addTest('flightCat throws', false, e.message); }
+
+      try {
+        const c = ceiling({ clouds: [ { cover: 'FEW', base: 3000 }, { cover: 'BKN', base: 2000 } ] });
+        addTest('ceiling BKN 2000', c === '2000 ft', c);
+      } catch (e) { addTest('ceiling throws', false, e.message); }
+
+      try {
+        const w = windStr({ windDir: 90, windSpeedKt: 12, windGustKt: 18 });
+        addTest('wind string', w === '090@12kt G18', w);
+      } catch (e) { addTest('windStr throws', false, e.message); }
+
+      try {
+        const td = tempDew({ temp: 22, dewpoint: 18 });
+        addTest('temp/dew', td === '22C/18C', td);
+      } catch (e) { addTest('tempDew throws', false, e.message); }
+
+      try {
+        const a = altim({ altimHg: 29.92 });
+        addTest('altimeter', a === '29.92 inHg', a);
+      } catch (e) { addTest('altim throws', false, e.message); }
+
+      document.getElementById('diag').textContent = 'Self tests completed.';
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
     startClock();
+    runTests();
     refreshAll();
     setInterval(refreshAll, 5 * 60 * 1000);
+
+    /*
+      Server setup notes
+      1) Reverse proxy to AWC API: map /proxy to https://aviationweather.gov
+      2) Create backend route /faa/notams that forwards to FAA NOTAM API with your credentials
+    */
   </script>
 </body>
 </html>
