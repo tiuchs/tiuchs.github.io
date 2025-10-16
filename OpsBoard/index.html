@@ -34,10 +34,20 @@
       grid-template-areas:
         "hero side"
         "metar side"
-        "notam tests";
+        "notam tests"
+        "xml tests";
     }
     @media (max-width: 1100px) {
-      .wrap { grid-template-columns: 1fr; grid-template-areas: "hero" "side" "metar" "notam" "tests"; }
+      .wrap {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "hero"
+          "side"
+          "metar"
+          "notam"
+          "xml"
+          "tests";
+      }
     }
     .panel { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); overflow: hidden; }
     .panel h2 { margin: 0; padding: 12px 16px; font-size: 18px; letter-spacing: 0.2px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
@@ -67,6 +77,8 @@
     .bar button { background: #1b2944; color: var(--text); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
     .bar button:hover { background: #223155; }
     .tests { grid-area: tests; }
+    .xml { grid-area: xml; }
+    pre { margin: 0; padding: 12px 16px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
     .test-pass { color: var(--good); }
     .test-fail { color: var(--bad); }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
@@ -80,7 +92,7 @@
         <iframe src="https://weatherstar.bnttech.me" title="WeatherStar"></iframe>
       </div>
       <div class="bar">
-        <div>Focus KHLR. Auto refresh 5 minutes. Data via proxy to AWC API.</div>
+        <div>Focus KHLR. Auto refresh 5 minutes. Data direct to AWC API.</div>
         <div><button id="refreshBtn" title="Refresh now">Refresh</button></div>
       </div>
     </section>
@@ -126,6 +138,17 @@
       <div class="bar"><span id="notamStatus">Loading NOTAMs.</span></div>
     </section>
 
+    <section class="panel xml">
+      <h2>XML Debug – Current METAR KHLR</h2>
+      <div class="bar">
+        <div>Source. https://aviationweather.gov/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&stationString=KHLR&format=XML</div>
+        <div>
+          <button id="xmlBtn" title="Fetch XML now">Fetch XML</button>
+        </div>
+      </div>
+      <pre id="xmlOut">Press Fetch XML to request the current METAR for KHLR in XML format.</pre>
+    </section>
+
     <section class="panel tests">
       <h2>Diagnostics</h2>
       <div id="diag" style="padding:12px 16px; color:var(--muted)">Running self tests.</div>
@@ -139,9 +162,9 @@
   </div>
 
   <script>
-    // API endpoints through a same-origin proxy
-    const AWC_API = "https://aviationweather.gov/api/data"; // /airport, /metar
-    const PROXY_BASE = "/proxy"; // configure on your server
+    // Direct AWC endpoints per your request
+    const AWC_BASE = "https://aviationweather.gov";
+    const AWC_PATH = "/api/data"; // /airport, /metar
 
     const state = {
       khlr: { icao: "KHLR", lat: null, lon: null },
@@ -208,8 +231,14 @@
       return r.json();
     }
 
+    async function fetchText(url) {
+      const r = await fetch(url, { cache: "no-store", headers: { "x-user-agent": "ops-display/1.0" } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.text();
+    }
+
     async function loadKHLRStation() {
-      const url = `${PROXY_BASE}${AWC_API}/airport?ids=KHLR&format=json`;
+      const url = `${AWC_BASE}${AWC_PATH}/airport?ids=KHLR&format=json`;
       const j = await fetchJSON(url);
       const s = j?.data?.[0];
       if (!s) throw new Error("KHLR airport not found");
@@ -220,12 +249,24 @@
 
     async function loadMETARs() {
       const lat = state.khlr.lat; const lon = state.khlr.lon;
-      const dLat = 50 / 60;
+      // bbox order: lon_min,lat_min,lon_max,lat_max
+      const dLat = 50 / 60; // deg per 50 NM
       const dLon = 50 / (60 * Math.cos(toRad(lat)));
-      const box = `${(lat - dLat).toFixed(4)},${(lon - dLon).toFixed(4)},${(lat + dLat).toFixed(4)},${(lon + dLon).toFixed(4)}`;
-      const url = `${PROXY_BASE}${AWC_API}/metar?bbox=${box}&hours=3&format=json`;
+      const box = `${(lon - dLon).toFixed(4)},${(lat - dLat).toFixed(4)},${(lon + dLon).toFixed(4)},${(lat + dLat).toFixed(4)}`;
+
+      const url = `${AWC_BASE}${AWC_PATH}/metar?bbox=${box}&hours=3&format=json`;
       const j = await fetchJSON(url);
-      const arr = j?.data || [];
+      let arr = j?.data || [];
+
+      const hasKHLR = arr.some(m => (m.icaoId||m.station||m.stationId) === 'KHLR');
+      if (!hasKHLR) {
+        try {
+          const kurl = `${AWC_BASE}${AWC_PATH}/metar?ids=KHLR&hours=6&format=json`;
+          const kj = await fetchJSON(kurl);
+          if (Array.isArray(kj?.data) && kj.data.length) arr.push(...kj.data);
+        } catch (_) {}
+      }
+
       const byIcao = new Map();
       for (const m of arr) {
         const icao = m.icaoId || m.station || m.id || m.stationId;
@@ -238,9 +279,11 @@
         const prev = byIcao.get(icao);
         if (!prev || Date.parse(prev.obsTime || prev.time || prev.observed || prev.issueTime || 0) < t) byIcao.set(icao, m);
       }
+
       const list = Array.from(byIcao.values())
         .filter(m => m._dist_nm <= 50.5)
-        .sort((a,b) => ( (a.icaoId||a.stationId||a.station)==='KHLR' ? -1 : ( (b.icaoId||b.stationId||b.station)==='KHLR' ? 1 : a._dist_nm - b._dist_nm)));
+        .sort((a,b) => ((a.icaoId||a.stationId||a.station)==='KHLR' ? -1 : ((b.icaoId||b.stationId||b.station)==='KHLR' ? 1 : a._dist_nm - b._dist_nm)));
+
       const picked = [];
       const others = [];
       for (const m of list) {
@@ -248,6 +291,7 @@
         if (id === 'KHLR') picked.push(m); else others.push(m);
       }
       picked.push(...others.slice(0, 10));
+
       state.metars = picked;
     }
 
@@ -278,8 +322,7 @@
     }
 
     async function loadNOTAMs() {
-      // Your backend should forward to FAA NOTAM API with credentials
-      const url = `${PROXY_BASE}/faa/notams?location=KHLR`;
+      const url = `/faa/notams?location=KHLR`;
       const j = await fetchJSON(url);
       const arr = j?.notams || j?.data || j || [];
       arr.sort((a,b) => Date.parse(b.issued || b.issue_date || 0) - Date.parse(a.issued || a.issue_date || 0));
@@ -327,7 +370,10 @@
         renderNOTAMs();
         renderQuick();
       } catch (e) {
-        document.getElementById('metarStatus').textContent = `Error loading data. ${e.message}`;
+        let msg = `Error loading data. ${e.message}`;
+        console.error('WX fetch failed', { msg: e.message });
+        if (e.message.includes('204')) msg += ' No recent METARs returned for query.';
+        document.getElementById('metarStatus').textContent = msg;
       }
     }
 
@@ -342,7 +388,7 @@
       setInterval(tick, 1000);
     }
 
-    // Simple self tests
+    // Test harness
     function addTest(name, pass, detail='') {
       const tbody = document.querySelector('#testTable tbody');
       const tr = document.createElement('tr');
@@ -382,19 +428,44 @@
         addTest('altimeter', a === '29.92 inHg', a);
       } catch (e) { addTest('altim throws', false, e.message); }
 
-      document.getElementById('diag').textContent = 'Self tests completed.';
+      try {
+        const xmlUrl = addsUrl({ dataSource: 'metars', requestType: 'retrieve', stationString: 'KHLR', format: 'XML' });
+        addTest('ADDS XML URL', /dataserver\.php\?.*dataSource=metars.*format=XML/.test(xmlUrl), xmlUrl);
+      } catch (e) { addTest('URL build throws', false, e.message); }
+
+      try {
+        // bbox order test lon_min,lat_min,lon_max,lat_max
+        const lat = 31.14, lon = -97.71; const dLat = 50/60; const dLon = 50/(60*Math.cos(toRad(lat)));
+        const box = `${(lon-dLon).toFixed(4)},${(lat-dLat).toFixed(4)},${(lon+dLon).toFixed(4)},${(lat+dLat).toFixed(4)}`;
+        addTest('bbox order', /^-?\d+\.\d{4},\d+\.\d{4},-?\d+\.\d{4},\d+\.\d{4}$/.test(box), box);
+      } catch (e) { addTest('bbox test throws', false, e.message); }
+
+      try {
+        const airportUrl = `${AWC_BASE}${AWC_PATH}/airport?ids=KHLR&format=json`;
+        addTest('Airport URL', /^https:\/\/aviationweather\.gov\/api\/data\/airport\?ids=KHLR&format=json$/.test(airportUrl), airportUrl);
+      } catch (e) { addTest('airport URL throws', false, e.message); }
+    }
+
+    async function fetchMetarXML() {
+      const url = addsUrl({ dataSource: 'metars', requestType: 'retrieve', stationString: 'KHLR', format: 'XML', hoursBeforeNow: '6' });
+      try {
+        const xml = await fetchText(url);
+        document.getElementById('xmlOut').textContent = xml;
+      } catch (e) {
+        document.getElementById('xmlOut').textContent = `Fetch error. ${e.message}. URL: ${url}`;
+      }
     }
 
     document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+    document.getElementById('xmlBtn').addEventListener('click', fetchMetarXML);
     startClock();
     runTests();
     refreshAll();
     setInterval(refreshAll, 5 * 60 * 1000);
 
     /*
-      Server setup notes
-      1) Reverse proxy to AWC API: map /proxy to https://aviationweather.gov
-      2) Create backend route /faa/notams that forwards to FAA NOTAM API with your credentials
+      Note: Direct browser calls to aviationweather.gov may be subject to CORS. If blocked, route via your backend.
+      NOTAMs still require your server at /faa/notams unless you provide a public FAA endpoint.
     */
   </script>
 </body>
