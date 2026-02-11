@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flight Scheduler</title>
+    <title>1-227 AB Flight Scheduler</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
     <main class="layout">
       <section class="card topbar">
-        <div>
-          <h1>Flight Scheduler</h1>
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+          <h1>1-227 AB Flight Scheduler</h1>
           <p class="subtle">Current view defaults to today's missions and the next 48 hours.</p>
+          </div>
         </div>
         <div class="user-tools">
           <span class="subtle">Signed in as <strong>{{ auth_user.username }}</strong> ({{ auth_user.role }})</span>
@@ -122,11 +125,11 @@
           </label>
           <label>
             Origin
-            <input name="origin" placeholder="KSVN" required />
+            <input name="origin" value="KHLR" required />
           </label>
           <label>
             Destination
-            <input name="destination" placeholder="KCHS" required />
+            <input name="destination" value="KHLR" required />
           </label>
           <label>
             Pilot in Command

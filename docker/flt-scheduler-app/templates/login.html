@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign In - Flight Scheduler</title>
+    <title>Sign In - 1-227 AB Flight Scheduler</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
     <main class="layout narrow">
       <section class="card">
-        <h1>Flight Scheduler Sign In</h1>
+        <div class="brand brand-login">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <h1>1-227 AB Flight Scheduler Sign In</h1>
+        </div>
         <p class="subtle">Use your assigned role account to access scheduling and approvals.</p>
         {% if error %}
         <p class="error">{{ error }}</p>

@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Settings - Flight Scheduler</title>
+    <title>Settings - 1-227 AB Flight Scheduler</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
     <main class="layout">
       <section class="card topbar">
-        <div>
-          <h1>Admin Settings</h1>
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+          <h1>1-227 AB Flight Scheduler - Admin Settings</h1>
           <p class="subtle">Manage users, crew, aircraft roster, and website theme.</p>
+          </div>
         </div>
         <div class="user-tools">
           <a class="button secondary" href="/">Back to Dashboard</a>
@@ -59,6 +62,7 @@
                 <th>Active</th>
                 <th>Update Role</th>
                 <th>Set Active</th>
+                <th>Reset Password</th>
               </tr>
             </thead>
             <tbody>
@@ -86,6 +90,12 @@
                     </button>
                   </form>
                 </td>
+                <td>
+                  <form method="POST" action="/settings/users/{{ user.id }}/password" class="inline">
+                    <input name="password" type="password" placeholder="New password" required />
+                    <button type="submit">Update</button>
+                  </form>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -109,12 +119,24 @@
           </label>
           <button type="submit">Add Crew Member</button>
         </form>
+        <form method="POST" action="/settings/crew/import" enctype="multipart/form-data" class="grid">
+          <label class="full">
+            Bulk Import Crew (CSV or one name per line)
+            <textarea name="crew_import_text" rows="4" placeholder="name,active&#10;John Smith,1&#10;Jane Doe,0"></textarea>
+          </label>
+          <label class="full">
+            Or upload file (.csv/.txt)
+            <input type="file" name="crew_import_file" accept=".csv,.txt" />
+          </label>
+          <button type="submit">Import Crew</button>
+        </form>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Active</th>
+                <th>Edit</th>
                 <th>Set Active</th>
               </tr>
             </thead>
@@ -123,6 +145,16 @@
               <tr>
                 <td>{{ member.name }}</td>
                 <td>{{ "Yes" if member.active else "No" }}</td>
+                <td>
+                  <form method="POST" action="/settings/crew/{{ member.id }}/update" class="inline">
+                    <input name="name" value="{{ member.name }}" required />
+                    <select name="active">
+                      <option value="1" {% if member.active %}selected{% endif %}>Active</option>
+                      <option value="0" {% if not member.active %}selected{% endif %}>Inactive</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
                 <td>
                   <form method="POST" action="/settings/crew/{{ member.id }}/active" class="inline">
                     <input type="hidden" name="active" value="{{ 0 if member.active else 1 }}" />
@@ -158,6 +190,21 @@
           </label>
           <button type="submit">Add Aircraft</button>
         </form>
+        <form method="POST" action="/settings/aircraft/import" enctype="multipart/form-data" class="grid">
+          <label class="full">
+            Bulk Import Aircraft (CSV)
+            <textarea
+              name="aircraft_import_text"
+              rows="4"
+              placeholder="tail_number,model,active&#10;A123,UH-60M,1&#10;A124,UH-60L,1"
+            ></textarea>
+          </label>
+          <label class="full">
+            Or upload file (.csv/.txt)
+            <input type="file" name="aircraft_import_file" accept=".csv,.txt" />
+          </label>
+          <button type="submit">Import Aircraft</button>
+        </form>
         <div class="table-wrap">
           <table>
             <thead>
@@ -165,6 +212,7 @@
                 <th>Tail</th>
                 <th>Model</th>
                 <th>Active</th>
+                <th>Edit</th>
                 <th>Set Active</th>
               </tr>
             </thead>
@@ -174,6 +222,17 @@
                 <td>{{ craft.tail_number }}</td>
                 <td>{{ craft.model }}</td>
                 <td>{{ "Yes" if craft.active else "No" }}</td>
+                <td>
+                  <form method="POST" action="/settings/aircraft/{{ craft.id }}/update" class="inline">
+                    <input name="tail_number" value="{{ craft.tail_number }}" required />
+                    <input name="model" value="{{ craft.model }}" placeholder="Model" />
+                    <select name="active">
+                      <option value="1" {% if craft.active %}selected{% endif %}>Active</option>
+                      <option value="0" {% if not craft.active %}selected{% endif %}>Inactive</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
                 <td>
                   <form method="POST" action="/settings/aircraft/{{ craft.id }}/active" class="inline">
                     <input type="hidden" name="active" value="{{ 0 if craft.active else 1 }}" />

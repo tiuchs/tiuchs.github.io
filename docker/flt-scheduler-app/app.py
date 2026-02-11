@@ -156,6 +156,41 @@ def set_app_setting(key: str, value: str):
         )
 
 
+def parse_active_value(raw: str | None, default: int = 1) -> int:
+    if raw is None or str(raw).strip() == "":
+        return default
+    value = str(raw).strip().lower()
+    if value in {"1", "true", "yes", "y", "on", "active"}:
+        return 1
+    if value in {"0", "false", "no", "n", "off", "inactive"}:
+        return 0
+    return default
+
+
+def read_bulk_import_text(form_key: str, file_key: str) -> str:
+    text = request.form.get(form_key, "").strip()
+    upload = request.files.get(file_key)
+    file_text = ""
+    if upload and upload.filename:
+        payload = upload.read()
+        if payload:
+            try:
+                file_text = payload.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                file_text = payload.decode("latin-1", errors="ignore")
+    combined = "\n".join(part for part in [text, file_text.strip()] if part).strip()
+    return combined
+
+
+def parse_bulk_rows(raw_text: str):
+    rows = []
+    for row in csv.reader(io.StringIO(raw_text)):
+        normalized = [cell.strip() for cell in row]
+        if any(normalized):
+            rows.append(normalized)
+    return rows
+
+
 def migrate_flights(conn: sqlite3.Connection):
     cols = {row["name"] for row in conn.execute("PRAGMA table_info(flights)").fetchall()}
     if "mission_id" not in cols:
@@ -932,6 +967,25 @@ def settings_update_user_active(user_id: int):
     return redirect(url_for("settings_page"))
 
 
+@app.post("/settings/users/<int:user_id>/password")
+@login_required
+@role_required("admin")
+def settings_update_user_password(user_id: int):
+    new_password = request.form.get("password", "")
+    if not new_password:
+        return redirect(url_for("settings_page"))
+
+    with db_conn() as conn:
+        target = conn.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (generate_password_hash(new_password), user_id),
+        )
+    if target:
+        write_audit("update_user_password", "user", str(user_id), f"Password reset for {target['username']}")
+    return redirect(url_for("settings_page"))
+
+
 @app.post("/settings/crew")
 @login_required
 @role_required("admin")
@@ -954,6 +1008,50 @@ def settings_create_crew():
     return redirect(url_for("settings_page"))
 
 
+@app.post("/settings/crew/import")
+@login_required
+@role_required("admin")
+def settings_import_crew():
+    raw = read_bulk_import_text("crew_import_text", "crew_import_file")
+    if not raw:
+        return redirect(url_for("settings_page"))
+
+    rows = parse_bulk_rows(raw)
+    if not rows:
+        return redirect(url_for("settings_page"))
+
+    start_idx = 0
+    header_tokens = {cell.strip().lower() for cell in rows[0]}
+    if "name" in header_tokens or "crew name" in header_tokens:
+        start_idx = 1
+
+    created = 0
+    updated = 0
+    skipped = 0
+    with db_conn() as conn:
+        for row in rows[start_idx:]:
+            name = row[0].strip() if row else ""
+            if not name:
+                skipped += 1
+                continue
+            active = parse_active_value(row[1] if len(row) > 1 else None, 1)
+            existing = conn.execute("SELECT id FROM crew WHERE name = ?", (name,)).fetchone()
+            if existing:
+                conn.execute("UPDATE crew SET active = ? WHERE id = ?", (active, existing["id"]))
+                updated += 1
+            else:
+                conn.execute("INSERT INTO crew (name, active) VALUES (?, ?)", (name, active))
+                created += 1
+
+    write_audit(
+        "bulk_import_crew",
+        "crew",
+        "bulk",
+        f"Crew import complete: created={created}, updated={updated}, skipped={skipped}",
+    )
+    return redirect(url_for("settings_page"))
+
+
 @app.post("/settings/crew/<int:crew_id>/active")
 @login_required
 @role_required("admin")
@@ -964,6 +1062,34 @@ def settings_update_crew_active(crew_id: int):
         conn.execute("UPDATE crew SET active = ? WHERE id = ?", (active, crew_id))
     if target:
         write_audit("update_crew_active", "crew", str(crew_id), f"{target['name']} active {target['active']} -> {active}")
+    return redirect(url_for("settings_page"))
+
+
+@app.post("/settings/crew/<int:crew_id>/update")
+@login_required
+@role_required("admin")
+def settings_update_crew(crew_id: int):
+    name = request.form.get("name", "").strip()
+    active = 1 if request.form.get("active", "1") == "1" else 0
+    if not name:
+        return redirect(url_for("settings_page"))
+
+    try:
+        with db_conn() as conn:
+            target = conn.execute("SELECT name, active FROM crew WHERE id = ?", (crew_id,)).fetchone()
+            conn.execute(
+                "UPDATE crew SET name = ?, active = ? WHERE id = ?",
+                (name, active, crew_id),
+            )
+        if target:
+            write_audit(
+                "update_crew",
+                "crew",
+                str(crew_id),
+                f"{target['name']} ({target['active']}) -> {name} ({active})",
+            )
+    except sqlite3.IntegrityError:
+        write_audit("update_crew_failed", "crew", str(crew_id), f"Duplicate crew name: {name}")
     return redirect(url_for("settings_page"))
 
 
@@ -990,6 +1116,68 @@ def settings_create_aircraft():
     return redirect(url_for("settings_page"))
 
 
+@app.post("/settings/aircraft/import")
+@login_required
+@role_required("admin")
+def settings_import_aircraft():
+    raw = read_bulk_import_text("aircraft_import_text", "aircraft_import_file")
+    if not raw:
+        return redirect(url_for("settings_page"))
+
+    rows = parse_bulk_rows(raw)
+    if not rows:
+        return redirect(url_for("settings_page"))
+
+    start_idx = 0
+    header = [cell.strip().lower() for cell in rows[0]]
+    index = {"tail": 0, "model": 1, "active": 2}
+    if any(token in {"tail", "tail_number", "tail number"} for token in header):
+        start_idx = 1
+        for i, token in enumerate(header):
+            if token in {"tail", "tail_number", "tail number"}:
+                index["tail"] = i
+            elif token == "model":
+                index["model"] = i
+            elif token == "active":
+                index["active"] = i
+
+    created = 0
+    updated = 0
+    skipped = 0
+    with db_conn() as conn:
+        for row in rows[start_idx:]:
+            tail_number = row[index["tail"]].strip().upper() if len(row) > index["tail"] else ""
+            model = row[index["model"]].strip() if len(row) > index["model"] else ""
+            active = parse_active_value(row[index["active"]] if len(row) > index["active"] else None, 1)
+            if not tail_number:
+                skipped += 1
+                continue
+            existing = conn.execute(
+                "SELECT id FROM aircraft WHERE tail_number = ?",
+                (tail_number,),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE aircraft SET model = ?, active = ? WHERE id = ?",
+                    (model, active, existing["id"]),
+                )
+                updated += 1
+            else:
+                conn.execute(
+                    "INSERT INTO aircraft (tail_number, model, active) VALUES (?, ?, ?)",
+                    (tail_number, model, active),
+                )
+                created += 1
+
+    write_audit(
+        "bulk_import_aircraft",
+        "aircraft",
+        "bulk",
+        f"Aircraft import complete: created={created}, updated={updated}, skipped={skipped}",
+    )
+    return redirect(url_for("settings_page"))
+
+
 @app.post("/settings/aircraft/<int:aircraft_id>/active")
 @login_required
 @role_required("admin")
@@ -1008,6 +1196,38 @@ def settings_update_aircraft_active(aircraft_id: int):
             str(aircraft_id),
             f"{target['tail_number']} active {target['active']} -> {active}",
         )
+    return redirect(url_for("settings_page"))
+
+
+@app.post("/settings/aircraft/<int:aircraft_id>/update")
+@login_required
+@role_required("admin")
+def settings_update_aircraft(aircraft_id: int):
+    tail_number = request.form.get("tail_number", "").strip().upper()
+    model = request.form.get("model", "").strip()
+    active = 1 if request.form.get("active", "1") == "1" else 0
+    if not tail_number:
+        return redirect(url_for("settings_page"))
+
+    try:
+        with db_conn() as conn:
+            target = conn.execute(
+                "SELECT tail_number, model, active FROM aircraft WHERE id = ?",
+                (aircraft_id,),
+            ).fetchone()
+            conn.execute(
+                "UPDATE aircraft SET tail_number = ?, model = ?, active = ? WHERE id = ?",
+                (tail_number, model, active, aircraft_id),
+            )
+        if target:
+            write_audit(
+                "update_aircraft",
+                "aircraft",
+                str(aircraft_id),
+                f"{target['tail_number']} {target['model']} ({target['active']}) -> {tail_number} {model} ({active})",
+            )
+    except sqlite3.IntegrityError:
+        write_audit("update_aircraft_failed", "aircraft", str(aircraft_id), f"Duplicate tail number: {tail_number}")
     return redirect(url_for("settings_page"))
 
 

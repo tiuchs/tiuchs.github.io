@@ -70,9 +70,24 @@ Roles:
   - Crew management
   - Aircraft roster
   - Website UI theme (light/dark)
+  - Bulk import for crew and aircraft (paste CSV/text or upload `.csv`/`.txt`)
 - Audit log for auth, flight changes, and settings/admin actions
 - Default dashboard visibility: today + next 48 hours
 - Weekly schedule view
 - Daily consolidated mission list
 - Approve/cancel/delete workflows
 - CSV export for daily crew notifications (`/daily.csv?date=YYYY-MM-DD`)
+
+## Bulk Import Formats
+
+- Crew:
+  - `name,active` CSV header optional
+  - Example:
+    - `John Smith,1`
+    - `Jane Doe,0`
+  - You can also provide one crew name per line.
+- Aircraft:
+  - `tail_number,model,active` CSV (header optional)
+  - Example:
+    - `A123,UH-60M,1`
+    - `A124,UH-60L,1`
