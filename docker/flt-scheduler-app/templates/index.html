@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ ui_theme }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,6 +15,9 @@
         </div>
         <div class="user-tools">
           <span class="subtle">Signed in as <strong>{{ auth_user.username }}</strong> ({{ auth_user.role }})</span>
+          {% if is_admin %}
+          <a class="button secondary" href="/settings">Settings</a>
+          {% endif %}
           <form method="POST" action="/logout">
             <button type="submit" class="secondary">Sign Out</button>
           </form>
@@ -48,7 +51,11 @@
                 <td>{{ flight.mission_type }}</td>
                 <td>{{ flight.mission_title }}</td>
                 <td>{{ flight.tail_number }}</td>
-                <td>{{ flight.origin }}-{{ flight.destination }}</td>
+                <td>
+                  <a href="{{ flight.skyvector_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ flight.origin }}-{{ flight.destination }}
+                  </a>
+                </td>
                 <td>{{ flight.crew }}</td>
                 <td><span class="chip {{ flight.status }}">{{ flight.status }}</span></td>
               </tr>
@@ -75,6 +82,11 @@
       {% if can_schedule %}
       <section class="card">
         <h2>Add Flight</h2>
+        {% if not roster_crew or not aircraft_roster %}
+        <p class="subtle">
+          Missing roster data. {% if is_admin %}Add active crew and aircraft in <a href="/settings">Settings</a>.{% else %}Contact an admin to add active crew and aircraft in Settings.{% endif %}
+        </p>
+        {% endif %}
         <form method="POST" action="/flights" class="grid">
           <label>
             Date
@@ -101,7 +113,12 @@
           </label>
           <label>
             Tail Number
-            <input name="tail_number" placeholder="A123" required />
+            <select name="tail_number" required>
+              <option value="">Select Aircraft</option>
+              {% for aircraft in aircraft_roster %}
+              <option value="{{ aircraft.tail_number }}">{{ aircraft.tail_number }}{% if aircraft.model %} ({{ aircraft.model }}){% endif %}</option>
+              {% endfor %}
+            </select>
           </label>
           <label>
             Origin
@@ -111,9 +128,43 @@
             Destination
             <input name="destination" placeholder="KCHS" required />
           </label>
+          <label>
+            Pilot in Command
+            <select name="pic_name" required>
+              <option value="">Select PIC</option>
+              {% for crew_user in roster_crew %}
+              <option value="{{ crew_user.name }}">{{ crew_user.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="checkbox-wrap">
+            <input type="checkbox" name="pic_is_amc" value="1" />
+            PIC is also acting as AMC
+          </label>
+          <label>
+            Pilot
+            <select name="pilot_name" required>
+              <option value="">Select Pilot</option>
+              {% for crew_user in roster_crew %}
+              <option value="{{ crew_user.name }}">{{ crew_user.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
           <label class="full">
-            Crew
-            <input name="crew" placeholder="Smith (PC), Jones (PI), Lewis (CE)" required />
+            Crew Members
+            <input name="crew_members" placeholder="Crew chief, gunner, medic..." />
+          </label>
+          <label class="full">
+            Non-rated Crew
+            <input name="non_rated_crew" placeholder="Observer, maintainer, etc." />
+          </label>
+          <label class="checkbox-wrap full">
+            <input type="checkbox" id="is_team_flight" name="is_team_flight" value="1" />
+            Team flight (linked to AMC mission)
+          </label>
+          <label class="full hidden" id="amc_mission_id_wrap">
+            AMC Mission ID
+            <input name="amc_mission_id" id="amc_mission_id" placeholder="2026042-001" />
           </label>
           <label class="full">
             Notes
@@ -161,7 +212,17 @@
                 <th>Mission</th>
                 <th>Tail</th>
                 <th>Route</th>
-                <th>Crew</th>
+                <th>PIC</th>
+                <th>Pilot</th>
+                <th>Crew Members</th>
+                <th>Non-rated Crew</th>
+                <th>Team</th>
+                <th>AMC Mission</th>
+                <th>Actuals</th>
+                <th>Closeout Comments</th>
+                <th>Cancel Reasons</th>
+                <th>Hours</th>
+                <th>Closed Out</th>
                 <th>Status</th>
                 {% if can_approve or can_schedule %}<th>Actions</th>{% endif %}
               </tr>
@@ -174,8 +235,61 @@
                 <td>{{ flight.mission_type }}</td>
                 <td>{{ flight.mission_title }}</td>
                 <td>{{ flight.tail_number }}</td>
-                <td>{{ flight.origin }}-{{ flight.destination }}</td>
-                <td>{{ flight.crew }}</td>
+                <td>
+                  <a href="{{ flight.skyvector_url }}" target="_blank" rel="noopener noreferrer">
+                    {{ flight.origin }}-{{ flight.destination }}
+                  </a>
+                </td>
+                <td>{{ flight.pic_name }}{% if flight.pic_is_amc %} (AMC){% endif %}</td>
+                <td>{{ flight.pilot_name }}</td>
+                <td>{{ flight.crew_members }}</td>
+                <td>{{ flight.non_rated_crew }}</td>
+                <td>{{ "Yes" if flight.is_team_flight else "No" }}</td>
+                <td>{{ flight.amc_mission_id }}</td>
+                <td>
+                  {% if can_schedule %}
+                  <form id="closeout-{{ flight.id }}" method="POST" action="/flights/{{ flight.id }}/closeout" class="hidden">
+                    <input type="hidden" name="focus_date" value="{{ selected_date }}" />
+                    <input type="hidden" name="closed_out" value="1" />
+                  </form>
+                  <div class="inline">
+                    <input type="time" name="actual_takeoff" value="{{ flight.actual_takeoff }}" form="closeout-{{ flight.id }}" />
+                    <input type="time" name="actual_arrival" value="{{ flight.actual_arrival }}" form="closeout-{{ flight.id }}" />
+                  </div>
+                  {% else %}
+                  {{ flight.actual_takeoff }}{% if flight.actual_takeoff and flight.actual_arrival %} - {% endif %}{{ flight.actual_arrival }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if can_schedule %}
+                  <textarea
+                    name="closeout_comments"
+                    rows="2"
+                    placeholder="Closeout comments"
+                    form="closeout-{{ flight.id }}"
+                  >{{ flight.closeout_comments }}</textarea>
+                  {% else %}
+                  {{ flight.closeout_comments }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if can_schedule and flight.status == "cancelled" %}
+                  <label class="checkline"><input type="checkbox" name="cancel_weather" value="1" {% if flight.cancel_weather %}checked{% endif %} form="closeout-{{ flight.id }}" /> Weather</label>
+                  <label class="checkline"><input type="checkbox" name="cancel_maintenance" value="1" {% if flight.cancel_maintenance %}checked{% endif %} form="closeout-{{ flight.id }}" /> Maintenance</label>
+                  <label class="checkline"><input type="checkbox" name="cancel_other" value="1" {% if flight.cancel_other %}checked{% endif %} form="closeout-{{ flight.id }}" /> Other</label>
+                  <input type="text" name="cancel_other_text" value="{{ flight.cancel_other_text }}" placeholder="Other details" form="closeout-{{ flight.id }}" />
+                  {% else %}
+                  {{ flight.cancel_reasons_display }}{% if flight.cancel_other_text %}: {{ flight.cancel_other_text }}{% endif %}
+                  {% endif %}
+                </td>
+                <td>{{ flight.actual_hours_decimal }}</td>
+                <td>
+                  {% if flight.closed_out %}
+                  Yes{% if flight.closed_at %} ({{ flight.closed_at }}){% endif %}
+                  {% else %}
+                  No
+                  {% endif %}
+                </td>
                 <td><span class="chip {{ flight.status }}">{{ flight.status }}</span></td>
                 {% if can_approve or can_schedule %}
                 <td>
@@ -193,6 +307,7 @@
                     </form>
                     {% endif %}
                     {% if can_schedule %}
+                    <button type="submit" class="secondary" form="closeout-{{ flight.id }}">Close Out</button>
                     <form method="POST" action="/flights/{{ flight.id }}/delete">
                       <input type="hidden" name="focus_date" value="{{ selected_date }}" />
                       <button type="submit" class="danger">Delete</button>
@@ -211,112 +326,20 @@
         {% endif %}
       </section>
 
-      {% if is_admin %}
-      <section class="card">
-        <h2>Admin: User Management</h2>
-        <form method="POST" action="/admin/users" class="grid">
-          <label>
-            Username
-            <input name="username" required />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" required />
-          </label>
-          <label>
-            Role
-            <select name="role" required>
-              <option value="user">User</option>
-              <option value="scheduler">Scheduler</option>
-              <option value="approver">Approver</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-          <label>
-            Active
-            <select name="active" required>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
-          </label>
-          <button type="submit">Add User</button>
-        </form>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Active</th>
-                <th>Update Role</th>
-                <th>Set Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for user in admin_users %}
-              <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.role }}</td>
-                <td>{{ "Yes" if user.active else "No" }}</td>
-                <td>
-                  <form method="POST" action="/admin/users/{{ user.id }}/role" class="inline">
-                    <select name="role">
-                      <option value="user" {% if user.role == "user" %}selected{% endif %}>User</option>
-                      <option value="scheduler" {% if user.role == "scheduler" %}selected{% endif %}>Scheduler</option>
-                      <option value="approver" {% if user.role == "approver" %}selected{% endif %}>Approver</option>
-                      <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
-                    </select>
-                    <button type="submit">Save</button>
-                  </form>
-                </td>
-                <td>
-                  <form method="POST" action="/admin/users/{{ user.id }}/active" class="inline">
-                    <input type="hidden" name="active" value="{{ 0 if user.active else 1 }}" />
-                    <button type="submit" class="secondary">
-                      {{ "Deactivate" if user.active else "Activate" }}
-                    </button>
-                  </form>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Admin: Recent Audit Log</h2>
-        {% if audit_logs %}
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>When (UTC)</th>
-                <th>Action</th>
-                <th>Entity</th>
-                <th>Actor</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for log in audit_logs %}
-              <tr>
-                <td>{{ log.created_at }}</td>
-                <td>{{ log.action }}</td>
-                <td>{{ log.entity_type }}:{{ log.entity_id }}</td>
-                <td>{{ log.actor_username }}</td>
-                <td>{{ log.details }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <p class="subtle">No audit records yet.</p>
-        {% endif %}
-      </section>
-      {% endif %}
     </main>
+    <script>
+      const teamFlight = document.getElementById("is_team_flight");
+      const amcWrap = document.getElementById("amc_mission_id_wrap");
+      const amcField = document.getElementById("amc_mission_id");
+      if (teamFlight && amcWrap && amcField) {
+        const sync = () => {
+          const on = teamFlight.checked;
+          amcWrap.classList.toggle("hidden", !on);
+          amcField.required = on;
+        };
+        teamFlight.addEventListener("change", sync);
+        sync();
+      }
+    </script>
   </body>
 </html>

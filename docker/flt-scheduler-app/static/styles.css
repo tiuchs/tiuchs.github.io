@@ -8,6 +8,16 @@
   --danger: #b22c2c;
 }
 
+html[data-theme="dark"] {
+  --bg: #0f1b23;
+  --card: #172733;
+  --text: #e6f0f6;
+  --muted: #a8bdcb;
+  --accent: #2f9bc3;
+  --line: #2d4555;
+  --danger: #c95252;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -20,6 +30,12 @@ body {
     radial-gradient(circle at 90% 10%, #d7e1ec, transparent 30%),
     var(--bg);
   color: var(--text);
+}
+
+code {
+  background: var(--line);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
 }
 
 .layout {
@@ -119,6 +135,10 @@ button.danger {
   flex-wrap: wrap;
 }
 
+.inline input[type="time"] {
+  min-width: 120px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -127,6 +147,16 @@ button.danger {
 
 .full {
   grid-column: 1 / -1;
+}
+
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hidden {
+  display: none;
 }
 
 .week-grid {
@@ -198,6 +228,11 @@ td {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+}
+
+.checkline {
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
 @media (max-width: 740px) {

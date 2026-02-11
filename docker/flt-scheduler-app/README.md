@@ -30,7 +30,7 @@ Roles:
 - `user`: view flights and export daily CSV.
 - `scheduler`: add/delete flight schedules.
 - `approver`: approve/cancel flight status.
-- `admin`: full access + user management.
+- `admin`: full access + settings management.
 
 ## Mission IDs
 
@@ -39,11 +39,38 @@ Roles:
 - `###` is a sequence number for that Julian date.
 - Example: `2026042-003` = 3rd mission on Feb 11, 2026.
 
+## Flight Planning Fields
+
+- Crew planning is structured:
+  - `Pilot in Command` (dropdown from active crew roster)
+  - `PIC is also AMC` (checkbox)
+  - `Pilot` (dropdown from active crew roster)
+  - `Crew Members` (text)
+  - `Non-rated Crew` (text)
+- Team flight support:
+  - `Team flight` checkbox
+  - If checked, `AMC Mission ID` is required
+- Actual times:
+  - Per-flight `Actual Takeoff` and `Actual Arrival` fields
+  - Auto-calculated `Actual Hours (Decimal)` shown in daily view and CSV
+- Daily closeout:
+  - `Close Out` action in Daily Consolidated Missions saves actuals + closeout comments
+  - If mission status is `cancelled`, closeout includes reason checkboxes:
+    - Weather
+    - Maintenance
+    - Other (with details)
+- Scheduler prerequisites:
+  - Add active crew and aircraft entries in `/settings` before creating flights
+
 ## What it does
 
 - Stores flights in SQLite (`docker/flt-scheduler-app/data/scheduler.db`)
-- User management for admins (create users and assign role/status)
-- Audit log for auth, flight changes, and admin user-management actions
+- Settings page for admins (`/settings`) with:
+  - User management
+  - Crew management
+  - Aircraft roster
+  - Website UI theme (light/dark)
+- Audit log for auth, flight changes, and settings/admin actions
 - Default dashboard visibility: today + next 48 hours
 - Weekly schedule view
 - Daily consolidated mission list
