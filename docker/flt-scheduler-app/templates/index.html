@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div>
+          <h1>Flight Scheduler</h1>
+          <p class="subtle">Current view defaults to today's missions and the next 48 hours.</p>
+        </div>
+        <div class="user-tools">
+          <span class="subtle">Signed in as <strong>{{ auth_user.username }}</strong> ({{ auth_user.role }})</span>
+          <form method="POST" action="/logout">
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Upcoming Missions ({{ upcoming_start }} to {{ upcoming_end }})</h2>
+        {% if upcoming %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mission ID</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Mission</th>
+                <th>Tail</th>
+                <th>Route</th>
+                <th>Crew</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for flight in upcoming %}
+              <tr>
+                <td><code>{{ flight.mission_id }}</code></td>
+                <td>{{ flight.flight_date }}</td>
+                <td>{{ flight.launch_time }}-{{ flight.recovery_time }}</td>
+                <td>{{ flight.mission_type }}</td>
+                <td>{{ flight.mission_title }}</td>
+                <td>{{ flight.tail_number }}</td>
+                <td>{{ flight.origin }}-{{ flight.destination }}</td>
+                <td>{{ flight.crew }}</td>
+                <td><span class="chip {{ flight.status }}">{{ flight.status }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="subtle">No flights in the current 48-hour window.</p>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <form method="GET" action="/">
+          <label for="date">Select Date</label>
+          <div class="inline">
+            <input id="date" name="date" type="date" value="{{ selected_date }}" required />
+            <button type="submit">Load</button>
+            <a class="button secondary" href="/daily.csv?date={{ selected_date }}">Export Daily CSV</a>
+          </div>
+        </form>
+      </section>
+
+      {% if can_schedule %}
+      <section class="card">
+        <h2>Add Flight</h2>
+        <form method="POST" action="/flights" class="grid">
+          <label>
+            Date
+            <input name="flight_date" type="date" value="{{ selected_date }}" required />
+          </label>
+          <label>
+            Launch
+            <input name="launch_time" type="time" required />
+          </label>
+          <label>
+            Recovery
+            <input name="recovery_time" type="time" required />
+          </label>
+          <label>
+            Type
+            <select name="mission_type" required>
+              <option value="training">Training</option>
+              <option value="mission">Mission</option>
+            </select>
+          </label>
+          <label>
+            Mission Title
+            <input name="mission_title" placeholder="Night route training" required />
+          </label>
+          <label>
+            Tail Number
+            <input name="tail_number" placeholder="A123" required />
+          </label>
+          <label>
+            Origin
+            <input name="origin" placeholder="KSVN" required />
+          </label>
+          <label>
+            Destination
+            <input name="destination" placeholder="KCHS" required />
+          </label>
+          <label class="full">
+            Crew
+            <input name="crew" placeholder="Smith (PC), Jones (PI), Lewis (CE)" required />
+          </label>
+          <label class="full">
+            Notes
+            <input name="notes" placeholder="Fuel stop at waypoint Bravo" />
+          </label>
+          <button type="submit">Save Flight</button>
+        </form>
+      </section>
+      {% endif %}
+
+      <section class="card">
+        <h2>Weekly Schedule ({{ week_start }} to {{ week_end }})</h2>
+        <div class="week-grid">
+          {% for day, flights in weekly.items() %}
+          <article class="day">
+            <h3>{{ day }}</h3>
+            {% if flights %}
+            <ul>
+              {% for flight in flights %}
+              <li>
+                <strong>{{ flight.launch_time }}-{{ flight.recovery_time }}</strong>
+                <span><code>{{ flight.mission_id }}</code> | {{ flight.tail_number }} | {{ flight.mission_title }}</span>
+                <span class="chip {{ flight.status }}">{{ flight.status }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="subtle">No flights scheduled</p>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Daily Consolidated Missions ({{ selected_date }})</h2>
+        {% if daily %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mission ID</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Mission</th>
+                <th>Tail</th>
+                <th>Route</th>
+                <th>Crew</th>
+                <th>Status</th>
+                {% if can_approve or can_schedule %}<th>Actions</th>{% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for flight in daily %}
+              <tr>
+                <td><code>{{ flight.mission_id }}</code></td>
+                <td>{{ flight.launch_time }}-{{ flight.recovery_time }}</td>
+                <td>{{ flight.mission_type }}</td>
+                <td>{{ flight.mission_title }}</td>
+                <td>{{ flight.tail_number }}</td>
+                <td>{{ flight.origin }}-{{ flight.destination }}</td>
+                <td>{{ flight.crew }}</td>
+                <td><span class="chip {{ flight.status }}">{{ flight.status }}</span></td>
+                {% if can_approve or can_schedule %}
+                <td>
+                  <div class="actions">
+                    {% if can_approve %}
+                    <form method="POST" action="/flights/{{ flight.id }}/status">
+                      <input type="hidden" name="focus_date" value="{{ selected_date }}" />
+                      <input type="hidden" name="status" value="approved" />
+                      <button type="submit">Approve</button>
+                    </form>
+                    <form method="POST" action="/flights/{{ flight.id }}/status">
+                      <input type="hidden" name="focus_date" value="{{ selected_date }}" />
+                      <input type="hidden" name="status" value="cancelled" />
+                      <button type="submit" class="secondary">Cancel</button>
+                    </form>
+                    {% endif %}
+                    {% if can_schedule %}
+                    <form method="POST" action="/flights/{{ flight.id }}/delete">
+                      <input type="hidden" name="focus_date" value="{{ selected_date }}" />
+                      <button type="submit" class="danger">Delete</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="subtle">No missions loaded for this day.</p>
+        {% endif %}
+      </section>
+
+      {% if is_admin %}
+      <section class="card">
+        <h2>Admin: User Management</h2>
+        <form method="POST" action="/admin/users" class="grid">
+          <label>
+            Username
+            <input name="username" required />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" required />
+          </label>
+          <label>
+            Role
+            <select name="role" required>
+              <option value="user">User</option>
+              <option value="scheduler">Scheduler</option>
+              <option value="approver">Approver</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <label>
+            Active
+            <select name="active" required>
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </label>
+          <button type="submit">Add User</button>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Active</th>
+                <th>Update Role</th>
+                <th>Set Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in admin_users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ "Yes" if user.active else "No" }}</td>
+                <td>
+                  <form method="POST" action="/admin/users/{{ user.id }}/role" class="inline">
+                    <select name="role">
+                      <option value="user" {% if user.role == "user" %}selected{% endif %}>User</option>
+                      <option value="scheduler" {% if user.role == "scheduler" %}selected{% endif %}>Scheduler</option>
+                      <option value="approver" {% if user.role == "approver" %}selected{% endif %}>Approver</option>
+                      <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/users/{{ user.id }}/active" class="inline">
+                    <input type="hidden" name="active" value="{{ 0 if user.active else 1 }}" />
+                    <button type="submit" class="secondary">
+                      {{ "Deactivate" if user.active else "Activate" }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Admin: Recent Audit Log</h2>
+        {% if audit_logs %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>When (UTC)</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Actor</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in audit_logs %}
+              <tr>
+                <td>{{ log.created_at }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.entity_type }}:{{ log.entity_id }}</td>
+                <td>{{ log.actor_username }}</td>
+                <td>{{ log.details }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="subtle">No audit records yet.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </main>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+services:
+  flt-scheduler:
+    build: ./flt-scheduler-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./flt-scheduler-app/data:/app/data

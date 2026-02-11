@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout narrow">
+      <section class="card">
+        <h1>Flight Scheduler Sign In</h1>
+        <p class="subtle">Use your assigned role account to access scheduling and approvals.</p>
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="POST" action="/login" class="grid">
+          <label>
+            Username
+            <input name="username" required />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" required />
+          </label>
+          <button type="submit">Sign In</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
