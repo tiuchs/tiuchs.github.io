@@ -93,15 +93,30 @@ def calculate_decimal_hours(actual_takeoff: str | None, actual_arrival: str | No
     return f"{(total_minutes / 60):.2f}"
 
 
-def build_skyvector_url(origin: str | None, destination: str | None) -> str:
+def build_skyvector_url(origin: str | None, route: str | None, destination: str | None) -> str:
     dep = (origin or "").strip().upper()
+    rte = " ".join((route or "").strip().upper().split())
     arr = (destination or "").strip().upper()
     if not dep or not arr:
         return ""
-    fpl = quote(f" {dep} {arr}", safe="")
+    fpl_parts = [dep]
+    if rte:
+        fpl_parts.append(rte)
+    fpl_parts.append(arr)
+    fpl = quote(f" {' '.join(fpl_parts)}", safe="")
     return (
         "https://skyvector.com/"
         f"?ll={SKYVECTOR_LL}&chart={SKYVECTOR_CHART}&zoom={SKYVECTOR_ZOOM}&fpl={fpl}"
+    )
+
+
+def build_crew_summary(payload: dict) -> str:
+    return (
+        f'PIC: {payload["pic_name"]}'
+        + (" (AMC)" if payload["pic_is_amc"] else "")
+        + f' | Pilot: {payload["pilot_name"]}'
+        + (f' | Crew: {payload["crew_members"]}' if payload["crew_members"] else "")
+        + (f' | Non-rated: {payload["non_rated_crew"]}' if payload["non_rated_crew"] else "")
     )
 
 
@@ -213,6 +228,8 @@ def migrate_flights(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE flights ADD COLUMN actual_takeoff TEXT DEFAULT ''")
     if "actual_arrival" not in cols:
         conn.execute("ALTER TABLE flights ADD COLUMN actual_arrival TEXT DEFAULT ''")
+    if "route" not in cols:
+        conn.execute("ALTER TABLE flights ADD COLUMN route TEXT DEFAULT ''")
     if "closeout_comments" not in cols:
         conn.execute("ALTER TABLE flights ADD COLUMN closeout_comments TEXT DEFAULT ''")
     if "closed_out" not in cols:
@@ -278,6 +295,7 @@ def init_db():
                 mission_title TEXT NOT NULL,
                 tail_number TEXT NOT NULL,
                 origin TEXT NOT NULL,
+                route TEXT DEFAULT '',
                 destination TEXT NOT NULL,
                 crew TEXT NOT NULL,
                 pic_name TEXT DEFAULT '',
@@ -429,7 +447,8 @@ def load_daily(day: date):
         dict(row)
         | {
             "actual_hours_decimal": calculate_decimal_hours(row["actual_takeoff"], row["actual_arrival"]),
-            "skyvector_url": build_skyvector_url(row["origin"], row["destination"]),
+            "skyvector_url": build_skyvector_url(row["origin"], row["route"], row["destination"]),
+            "route_display": " ".join(part for part in [row["origin"], row["route"], row["destination"]] if part),
             "cancel_reasons_display": ", ".join(
                 part
                 for part in [
@@ -446,8 +465,12 @@ def load_daily(day: date):
 
 def load_upcoming_48h():
     now = datetime.now()
-    window_start = datetime.combine(date.today(), time.min)
-    window_end = now + timedelta(hours=48)
+    if now.time() >= time(6, 0):
+        start_day = date.today()
+    else:
+        start_day = date.today() - timedelta(days=1)
+    window_start = datetime.combine(start_day, time(6, 0))
+    window_end = window_start + timedelta(days=2) - timedelta(minutes=1)
     with db_conn() as conn:
         rows = conn.execute(
             """
@@ -462,7 +485,8 @@ def load_upcoming_48h():
         dict(row)
         | {
             "actual_hours_decimal": calculate_decimal_hours(row["actual_takeoff"], row["actual_arrival"]),
-            "skyvector_url": build_skyvector_url(row["origin"], row["destination"]),
+            "skyvector_url": build_skyvector_url(row["origin"], row["route"], row["destination"]),
+            "route_display": " ".join(part for part in [row["origin"], row["route"], row["destination"]] if part),
         }
         for row in rows
     ], window_start, window_end
@@ -575,11 +599,61 @@ def logout():
 def index():
     user = current_user()
     selected = parse_date(request.args.get("date"))
+    edit_mission_id = request.args.get("edit_mission_id", "").strip()
     start, weekly = load_week(selected)
     daily = load_daily(selected)
     upcoming, window_start, window_end = load_upcoming_48h()
     roster_crew = load_active_crew()
     aircraft_roster = load_active_aircraft()
+    edit_flight = None
+    form_defaults = {
+        "flight_id": "",
+        "flight_date": selected.strftime(DATE_FMT),
+        "launch_time": "",
+        "recovery_time": "",
+        "mission_type": "training",
+        "mission_title": "",
+        "tail_number": "",
+        "origin": "KHLR",
+        "route": "",
+        "destination": "KHLR",
+        "pic_name": "",
+        "pic_is_amc": 0,
+        "pilot_name": "",
+        "crew_members": "",
+        "non_rated_crew": "",
+        "is_team_flight": 0,
+        "amc_mission_id": "",
+        "notes": "",
+    }
+
+    if edit_mission_id and has_role(user, "scheduler"):
+        with db_conn() as conn:
+            row = conn.execute("SELECT * FROM flights WHERE mission_id = ?", (edit_mission_id,)).fetchone()
+        if row:
+            edit_flight = dict(row)
+            form_defaults.update(
+                {
+                    "flight_id": row["id"],
+                    "flight_date": row["flight_date"],
+                    "launch_time": row["launch_time"],
+                    "recovery_time": row["recovery_time"],
+                    "mission_type": row["mission_type"],
+                    "mission_title": row["mission_title"],
+                    "tail_number": row["tail_number"],
+                    "origin": row["origin"],
+                    "route": row["route"],
+                    "destination": row["destination"],
+                    "pic_name": row["pic_name"],
+                    "pic_is_amc": row["pic_is_amc"],
+                    "pilot_name": row["pilot_name"],
+                    "crew_members": row["crew_members"],
+                    "non_rated_crew": row["non_rated_crew"],
+                    "is_team_flight": row["is_team_flight"],
+                    "amc_mission_id": row["amc_mission_id"],
+                    "notes": row["notes"],
+                }
+            )
 
     return render_template(
         "index.html",
@@ -597,6 +671,8 @@ def index():
         is_admin=has_role(user, "admin"),
         roster_crew=roster_crew,
         aircraft_roster=aircraft_roster,
+        edit_flight=edit_flight,
+        form_defaults=form_defaults,
     )
 
 
@@ -604,19 +680,52 @@ def index():
 @login_required
 @role_required("admin")
 def settings_page():
+    return redirect(url_for("settings_admin_page"))
+
+
+@app.get("/settings/admin")
+@login_required
+@role_required("admin")
+def settings_admin_page():
     with db_conn() as conn:
         users = conn.execute("SELECT id, username, role, active FROM users ORDER BY username").fetchall()
+    logs = load_recent_audit_logs()
+    export_start = date.today().strftime(DATE_FMT)
+    export_end = (date.today() + timedelta(days=7)).strftime(DATE_FMT)
+    return render_template(
+        "settings_admin.html",
+        users=users,
+        audit_logs=logs,
+        ui_theme=get_app_setting("ui_theme", "light"),
+        export_start=export_start,
+        export_end=export_end,
+    )
+
+
+@app.get("/settings/crew")
+@login_required
+@role_required("admin")
+def settings_crew_page():
+    with db_conn() as conn:
         crew = conn.execute("SELECT id, name, active FROM crew ORDER BY name").fetchall()
+    return render_template(
+        "settings_crew.html",
+        crew=crew,
+        ui_theme=get_app_setting("ui_theme", "light"),
+    )
+
+
+@app.get("/settings/aircraft")
+@login_required
+@role_required("admin")
+def settings_aircraft_page():
+    with db_conn() as conn:
         aircraft = conn.execute(
             "SELECT id, tail_number, model, active FROM aircraft ORDER BY tail_number"
         ).fetchall()
-    logs = load_recent_audit_logs()
     return render_template(
-        "settings.html",
-        users=users,
-        crew=crew,
+        "settings_aircraft.html",
         aircraft=aircraft,
-        audit_logs=logs,
         ui_theme=get_app_setting("ui_theme", "light"),
     )
 
@@ -625,6 +734,8 @@ def settings_page():
 @login_required
 @role_required("scheduler")
 def create_flight():
+    flight_id_raw = request.form.get("flight_id", "").strip()
+    editing_id = int(flight_id_raw) if flight_id_raw.isdigit() else None
     payload = {
         "flight_date": request.form.get("flight_date", "").strip(),
         "launch_time": request.form.get("launch_time", "").strip(),
@@ -633,6 +744,7 @@ def create_flight():
         "mission_title": request.form.get("mission_title", "").strip(),
         "tail_number": request.form.get("tail_number", "").strip(),
         "origin": request.form.get("origin", "").strip(),
+        "route": request.form.get("route", "").strip().upper(),
         "destination": request.form.get("destination", "").strip(),
         "pic_name": request.form.get("pic_name", "").strip(),
         "pic_is_amc": coerce_checkbox(request.form.get("pic_is_amc")),
@@ -643,13 +755,7 @@ def create_flight():
         "amc_mission_id": request.form.get("amc_mission_id", "").strip(),
         "notes": request.form.get("notes", "").strip(),
     }
-    payload["crew"] = (
-        f'PIC: {payload["pic_name"]}'
-        + (" (AMC)" if payload["pic_is_amc"] else "")
-        + f' | Pilot: {payload["pilot_name"]}'
-        + (f' | Crew: {payload["crew_members"]}' if payload["crew_members"] else "")
-        + (f' | Non-rated: {payload["non_rated_crew"]}' if payload["non_rated_crew"] else "")
-    )
+    payload["crew"] = build_crew_summary(payload)
 
     required = [
         "flight_date",
@@ -669,6 +775,89 @@ def create_flight():
     if payload["is_team_flight"] and not payload["amc_mission_id"]:
         return redirect(url_for("index", date=payload["flight_date"] or date.today().strftime(DATE_FMT)))
 
+    update_fields = [
+        "flight_date",
+        "launch_time",
+        "recovery_time",
+        "mission_type",
+        "mission_title",
+        "tail_number",
+        "origin",
+        "route",
+        "destination",
+        "crew",
+        "pic_name",
+        "pic_is_amc",
+        "pilot_name",
+        "crew_members",
+        "non_rated_crew",
+        "is_team_flight",
+        "amc_mission_id",
+        "notes",
+    ]
+
+    if editing_id:
+        with db_conn() as conn:
+            current = conn.execute("SELECT * FROM flights WHERE id = ?", (editing_id,)).fetchone()
+            if not current:
+                return redirect(url_for("index", date=payload["flight_date"]))
+
+            changed = any(
+                str(current[field] if current[field] is not None else "") != str(payload[field] if payload[field] is not None else "")
+                for field in update_fields
+            )
+
+            conn.execute(
+                """
+                UPDATE flights
+                SET flight_date = ?, launch_time = ?, recovery_time = ?, mission_type = ?, mission_title = ?,
+                    tail_number = ?, origin = ?, route = ?, destination = ?, crew = ?, pic_name = ?, pic_is_amc = ?,
+                    pilot_name = ?, crew_members = ?, non_rated_crew = ?, is_team_flight = ?, amc_mission_id = ?, notes = ?,
+                    status = ?, closed_out = ?, closed_at = ?, closeout_comments = ?, actual_takeoff = ?, actual_arrival = ?,
+                    cancel_weather = ?, cancel_maintenance = ?, cancel_other = ?, cancel_other_text = ?
+                WHERE id = ?
+                """,
+                (
+                    payload["flight_date"],
+                    payload["launch_time"],
+                    payload["recovery_time"],
+                    payload["mission_type"],
+                    payload["mission_title"],
+                    payload["tail_number"],
+                    payload["origin"],
+                    payload["route"],
+                    payload["destination"],
+                    payload["crew"],
+                    payload["pic_name"],
+                    payload["pic_is_amc"],
+                    payload["pilot_name"],
+                    payload["crew_members"],
+                    payload["non_rated_crew"],
+                    payload["is_team_flight"],
+                    payload["amc_mission_id"],
+                    payload["notes"],
+                    "planned" if changed else current["status"],
+                    0 if changed else current["closed_out"],
+                    "" if changed else current["closed_at"],
+                    "" if changed else current["closeout_comments"],
+                    "" if changed else current["actual_takeoff"],
+                    "" if changed else current["actual_arrival"],
+                    0 if changed else current["cancel_weather"],
+                    0 if changed else current["cancel_maintenance"],
+                    0 if changed else current["cancel_other"],
+                    "" if changed else current["cancel_other_text"],
+                    editing_id,
+                ),
+            )
+
+        write_audit(
+            "update_flight",
+            "flight",
+            str(editing_id),
+            f"Mission {current['mission_id']} updated; changed={changed}; status={'planned' if changed else current['status']}",
+        )
+        return redirect(url_for("index", date=payload["flight_date"]))
+
     try:
         with db_conn() as conn:
             mission_id = next_mission_id(conn, payload["flight_date"])
@@ -676,9 +865,9 @@ def create_flight():
                 """
                 INSERT INTO flights (
                     mission_id, flight_date, launch_time, recovery_time, mission_type, mission_title,
-                    tail_number, origin, destination, crew, pic_name, pic_is_amc, pilot_name,
+                    tail_number, origin, route, destination, crew, pic_name, pic_is_amc, pilot_name,
                     crew_members, non_rated_crew, is_team_flight, amc_mission_id, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     mission_id,
@@ -689,6 +878,7 @@ def create_flight():
                     payload["mission_title"],
                     payload["tail_number"],
                     payload["origin"],
+                    payload["route"],
                     payload["destination"],
                     payload["crew"],
                     payload["pic_name"],
@@ -864,8 +1054,8 @@ def daily_csv():
                 row["mission_type"],
                 row["mission_title"],
                 row["tail_number"],
-                f'{row["origin"]}-{row["destination"]}',
-                build_skyvector_url(row["origin"], row["destination"]),
+                " ".join(part for part in [row["origin"], row["route"], row["destination"]] if part),
+                build_skyvector_url(row["origin"], row["route"], row["destination"]),
                 row["pic_name"],
                 "Yes" if row["pic_is_amc"] else "No",
                 row["pilot_name"],
@@ -909,7 +1099,7 @@ def settings_create_user():
     active = 1 if request.form.get("active", "1") == "1" else 0
 
     if not username or not password or role not in ROLES:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
 
     try:
         with db_conn() as conn:
@@ -921,8 +1111,8 @@ def settings_create_user():
         write_audit("create_user", "user", str(user_id), f"Created {username} as {role} (active={active})")
     except sqlite3.IntegrityError:
         write_audit("create_user_failed", "user", username, "Username already exists")
-        return redirect(url_for("settings_page"))
-    return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
+    return redirect(url_for("settings_admin_page"))
 
 
 @app.post("/settings/users/<int:user_id>/role")
@@ -931,18 +1121,18 @@ def settings_create_user():
 def settings_update_user_role(user_id: int):
     role = request.form.get("role", "user")
     if role not in ROLES:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
 
     user = current_user()
     if user and user["id"] == user_id and role != "admin":
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
 
     with db_conn() as conn:
         target = conn.execute("SELECT username, role FROM users WHERE id = ?", (user_id,)).fetchone()
         conn.execute("UPDATE users SET role = ? WHERE id = ?", (role, user_id))
     if target:
         write_audit("update_user_role", "user", str(user_id), f"{target['username']} role {target['role']} -> {role}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_admin_page"))
 
 
 @app.post("/settings/users/<int:user_id>/active")
@@ -951,7 +1141,7 @@ def settings_update_user_role(user_id: int):
 def settings_update_user_active(user_id: int):
     user = current_user()
     if user and user["id"] == user_id:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
 
     active = 1 if request.form.get("active", "0") == "1" else 0
     with db_conn() as conn:
@@ -964,7 +1154,7 @@ def settings_update_user_active(user_id: int):
             str(user_id),
             f"{target['username']} active {target['active']} -> {active}",
         )
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_admin_page"))
 
 
 @app.post("/settings/users/<int:user_id>/password")
@@ -973,7 +1163,7 @@ def settings_update_user_active(user_id: int):
 def settings_update_user_password(user_id: int):
     new_password = request.form.get("password", "")
     if not new_password:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
 
     with db_conn() as conn:
         target = conn.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -983,7 +1173,7 @@ def settings_update_user_password(user_id: int):
         )
     if target:
         write_audit("update_user_password", "user", str(user_id), f"Password reset for {target['username']}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_admin_page"))
 
 
 @app.post("/settings/crew")
@@ -993,7 +1183,7 @@ def settings_create_crew():
     name = request.form.get("name", "").strip()
     active = 1 if request.form.get("active", "1") == "1" else 0
     if not name:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_crew_page"))
 
     try:
         with db_conn() as conn:
@@ -1005,7 +1195,7 @@ def settings_create_crew():
         write_audit("create_crew", "crew", str(crew_id), f"Created crew {name} (active={active})")
     except sqlite3.IntegrityError:
         write_audit("create_crew_failed", "crew", name, "Crew member already exists")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_crew_page"))
 
 
 @app.post("/settings/crew/import")
@@ -1014,11 +1204,11 @@ def settings_create_crew():
 def settings_import_crew():
     raw = read_bulk_import_text("crew_import_text", "crew_import_file")
     if not raw:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_crew_page"))
 
     rows = parse_bulk_rows(raw)
     if not rows:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_crew_page"))
 
     start_idx = 0
     header_tokens = {cell.strip().lower() for cell in rows[0]}
@@ -1049,7 +1239,7 @@ def settings_import_crew():
         "bulk",
         f"Crew import complete: created={created}, updated={updated}, skipped={skipped}",
     )
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_crew_page"))
 
 
 @app.post("/settings/crew/<int:crew_id>/active")
@@ -1062,7 +1252,7 @@ def settings_update_crew_active(crew_id: int):
         conn.execute("UPDATE crew SET active = ? WHERE id = ?", (active, crew_id))
     if target:
         write_audit("update_crew_active", "crew", str(crew_id), f"{target['name']} active {target['active']} -> {active}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_crew_page"))
 
 
 @app.post("/settings/crew/<int:crew_id>/update")
@@ -1072,7 +1262,7 @@ def settings_update_crew(crew_id: int):
     name = request.form.get("name", "").strip()
     active = 1 if request.form.get("active", "1") == "1" else 0
     if not name:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_crew_page"))
 
     try:
         with db_conn() as conn:
@@ -1090,7 +1280,7 @@ def settings_update_crew(crew_id: int):
             )
     except sqlite3.IntegrityError:
         write_audit("update_crew_failed", "crew", str(crew_id), f"Duplicate crew name: {name}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_crew_page"))
 
 
 @app.post("/settings/aircraft")
@@ -1101,7 +1291,7 @@ def settings_create_aircraft():
     model = request.form.get("model", "").strip()
     active = 1 if request.form.get("active", "1") == "1" else 0
     if not tail_number:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_aircraft_page"))
 
     try:
         with db_conn() as conn:
@@ -1113,7 +1303,7 @@ def settings_create_aircraft():
         write_audit("create_aircraft", "aircraft", str(aircraft_id), f"Added {tail_number} ({model}) active={active}")
     except sqlite3.IntegrityError:
         write_audit("create_aircraft_failed", "aircraft", tail_number, "Aircraft already exists")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_aircraft_page"))
 
 
 @app.post("/settings/aircraft/import")
@@ -1122,11 +1312,11 @@ def settings_create_aircraft():
 def settings_import_aircraft():
     raw = read_bulk_import_text("aircraft_import_text", "aircraft_import_file")
     if not raw:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_aircraft_page"))
 
     rows = parse_bulk_rows(raw)
     if not rows:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_aircraft_page"))
 
     start_idx = 0
     header = [cell.strip().lower() for cell in rows[0]]
@@ -1175,7 +1365,7 @@ def settings_import_aircraft():
         "bulk",
         f"Aircraft import complete: created={created}, updated={updated}, skipped={skipped}",
     )
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_aircraft_page"))
 
 
 @app.post("/settings/aircraft/<int:aircraft_id>/active")
@@ -1196,7 +1386,7 @@ def settings_update_aircraft_active(aircraft_id: int):
             str(aircraft_id),
             f"{target['tail_number']} active {target['active']} -> {active}",
         )
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_aircraft_page"))
 
 
 @app.post("/settings/aircraft/<int:aircraft_id>/update")
@@ -1207,7 +1397,7 @@ def settings_update_aircraft(aircraft_id: int):
     model = request.form.get("model", "").strip()
     active = 1 if request.form.get("active", "1") == "1" else 0
     if not tail_number:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_aircraft_page"))
 
     try:
         with db_conn() as conn:
@@ -1228,7 +1418,7 @@ def settings_update_aircraft(aircraft_id: int):
             )
     except sqlite3.IntegrityError:
         write_audit("update_aircraft_failed", "aircraft", str(aircraft_id), f"Duplicate tail number: {tail_number}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_aircraft_page"))
 
 
 @app.post("/settings/theme")
@@ -1237,10 +1427,122 @@ def settings_update_aircraft(aircraft_id: int):
 def settings_theme():
     theme = request.form.get("theme", "light").strip().lower()
     if theme not in {"light", "dark"}:
-        return redirect(url_for("settings_page"))
+        return redirect(url_for("settings_admin_page"))
     set_app_setting("ui_theme", theme)
     write_audit("update_ui_theme", "app_settings", "ui_theme", f"Theme set to {theme}")
-    return redirect(url_for("settings_page"))
+    return redirect(url_for("settings_admin_page"))
+
+
+@app.get("/settings/export/flights.csv")
+@login_required
+@role_required("admin")
+def settings_export_flights_csv():
+    start_date = parse_date(request.args.get("start_date"))
+    end_date = parse_date(request.args.get("end_date"))
+    if end_date < start_date:
+        start_date, end_date = end_date, start_date
+
+    with db_conn() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM flights
+            WHERE flight_date BETWEEN ? AND ?
+            ORDER BY flight_date, launch_time, tail_number
+            """,
+            (start_date.strftime(DATE_FMT), end_date.strftime(DATE_FMT)),
+        ).fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "Mission ID",
+            "Date",
+            "Launch",
+            "Recovery",
+            "Type",
+            "Mission",
+            "Tail",
+            "Origin",
+            "Route",
+            "Destination",
+            "SkyVector URL",
+            "PIC",
+            "PIC AMC",
+            "Pilot",
+            "Crew Members",
+            "Non-rated Crew",
+            "Team Flight",
+            "AMC Mission ID",
+            "Crew Summary",
+            "Actual Takeoff",
+            "Actual Arrival",
+            "Actual Hours (Decimal)",
+            "Closed Out",
+            "Closed At (UTC)",
+            "Closeout Comments",
+            "Cancel Weather",
+            "Cancel Maintenance",
+            "Cancel Other",
+            "Cancel Other Details",
+            "Status",
+            "Notes",
+        ]
+    )
+
+    for row in rows:
+        writer.writerow(
+            [
+                row["mission_id"],
+                row["flight_date"],
+                row["launch_time"],
+                row["recovery_time"],
+                row["mission_type"],
+                row["mission_title"],
+                row["tail_number"],
+                row["origin"],
+                row["route"],
+                row["destination"],
+                build_skyvector_url(row["origin"], row["route"], row["destination"]),
+                row["pic_name"],
+                "Yes" if row["pic_is_amc"] else "No",
+                row["pilot_name"],
+                row["crew_members"],
+                row["non_rated_crew"],
+                "Yes" if row["is_team_flight"] else "No",
+                row["amc_mission_id"],
+                row["crew"],
+                row["actual_takeoff"],
+                row["actual_arrival"],
+                calculate_decimal_hours(row["actual_takeoff"], row["actual_arrival"]),
+                "Yes" if row["closed_out"] else "No",
+                row["closed_at"],
+                row["closeout_comments"],
+                "Yes" if row["cancel_weather"] else "No",
+                "Yes" if row["cancel_maintenance"] else "No",
+                "Yes" if row["cancel_other"] else "No",
+                row["cancel_other_text"],
+                row["status"],
+                row["notes"],
+            ]
+        )
+
+    write_audit(
+        "export_flights_csv",
+        "flight",
+        "range",
+        f"Exported flights from {start_date.strftime(DATE_FMT)} to {end_date.strftime(DATE_FMT)} ({len(rows)} rows)",
+    )
+
+    buffer = io.BytesIO(output.getvalue().encode("utf-8"))
+    filename = f"scheduled-flights-{start_date.strftime(DATE_FMT)}-to-{end_date.strftime(DATE_FMT)}.csv"
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="text/csv",
+    )
 
 
 init_db()

@@ -66,11 +66,12 @@ Roles:
 
 - Stores flights in SQLite (`docker/flt-scheduler-app/data/scheduler.db`)
 - Settings page for admins (`/settings`) with:
-  - User management
-  - Crew management
-  - Aircraft roster
+  - Admin settings (`/settings/admin`)
+  - Crew management (`/settings/crew`)
+  - Aircraft management (`/settings/aircraft`)
   - Website UI theme (light/dark)
   - Bulk import for crew and aircraft (paste CSV/text or upload `.csv`/`.txt`)
+  - Date-range export for scheduled flights CSV
 - Audit log for auth, flight changes, and settings/admin actions
 - Default dashboard visibility: today + next 48 hours
 - Weekly schedule view
@@ -91,3 +92,10 @@ Roles:
   - Example:
     - `A123,UH-60M,1`
     - `A124,UH-60L,1`
+- Route planning:
+  - Optional `Route` field between origin and destination
+  - Included in SkyVector `fpl` as `origin route destination`
+  - Example: `fpl=%20KHLR%2022XS%20KTPL`
+- Mission edit workflow:
+  - In Daily Consolidated Missions, schedulers/admins can click a mission ID to load that mission into Add Flight for editing.
+  - Saving changes resets mission status to `planned` so it can be re-approved.

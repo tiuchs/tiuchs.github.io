@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Settings - 1-227 AB Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+            <h1>1-227 AB Flight Scheduler - Settings</h1>
+            <p class="subtle">Admin controls and system settings.</p>
+          </div>
+        </div>
+        <div class="user-tools">
+          <a class="button secondary" href="/">Back to Dashboard</a>
+          <form method="POST" action="/logout">
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <nav class="settings-menu">
+          <a class="active" href="/settings/admin">Admin Settings</a>
+          <a href="/settings/crew">Crew Management</a>
+          <a href="/settings/aircraft">Aircraft Management</a>
+        </nav>
+      </section>
+
+      <section class="card">
+        <h2>User Management</h2>
+        <form method="POST" action="/settings/users" class="grid">
+          <label>Username<input name="username" required /></label>
+          <label>Password<input name="password" type="password" required /></label>
+          <label>
+            Role
+            <select name="role" required>
+              <option value="user">User</option>
+              <option value="scheduler">Scheduler</option>
+              <option value="approver">Approver</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <label>
+            Active
+            <select name="active" required>
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </label>
+          <button type="submit">Add User</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Active</th>
+                <th>Update Role</th>
+                <th>Set Active</th>
+                <th>Reset Password</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ "Yes" if user.active else "No" }}</td>
+                <td>
+                  <form method="POST" action="/settings/users/{{ user.id }}/role" class="inline">
+                    <select name="role">
+                      <option value="user" {% if user.role == "user" %}selected{% endif %}>User</option>
+                      <option value="scheduler" {% if user.role == "scheduler" %}selected{% endif %}>Scheduler</option>
+                      <option value="approver" {% if user.role == "approver" %}selected{% endif %}>Approver</option>
+                      <option value="admin" {% if user.role == "admin" %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/settings/users/{{ user.id }}/active" class="inline">
+                    <input type="hidden" name="active" value="{{ 0 if user.active else 1 }}" />
+                    <button type="submit" class="secondary">{{ "Deactivate" if user.active else "Activate" }}</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/settings/users/{{ user.id }}/password" class="inline">
+                    <input name="password" type="password" placeholder="New password" required />
+                    <button type="submit">Update</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Website UI Settings</h2>
+        <form method="POST" action="/settings/theme" class="inline">
+          <label>
+            Theme
+            <select name="theme">
+              <option value="light" {% if ui_theme == "light" %}selected{% endif %}>Light</option>
+              <option value="dark" {% if ui_theme == "dark" %}selected{% endif %}>Dark</option>
+            </select>
+          </label>
+          <button type="submit">Save Theme</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Export Scheduled Flights</h2>
+        <form method="GET" action="/settings/export/flights.csv" class="inline">
+          <label>Start Date<input type="date" name="start_date" value="{{ export_start }}" required /></label>
+          <label>End Date<input type="date" name="end_date" value="{{ export_end }}" required /></label>
+          <button type="submit">Export CSV</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Recent Audit Log</h2>
+        {% if audit_logs %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>When (UTC)</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Actor</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in audit_logs %}
+              <tr>
+                <td>{{ log.created_at }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.entity_type }}:{{ log.entity_id }}</td>
+                <td>{{ log.actor_username }}</td>
+                <td>{{ log.details }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="subtle">No audit records yet.</p>
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>

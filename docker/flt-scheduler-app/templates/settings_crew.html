@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crew Management - 1-227 AB Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+            <h1>1-227 AB Flight Scheduler - Settings</h1>
+            <p class="subtle">Crew management.</p>
+          </div>
+        </div>
+        <div class="user-tools">
+          <a class="button secondary" href="/">Back to Dashboard</a>
+          <form method="POST" action="/logout">
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <nav class="settings-menu">
+          <a href="/settings/admin">Admin Settings</a>
+          <a class="active" href="/settings/crew">Crew Management</a>
+          <a href="/settings/aircraft">Aircraft Management</a>
+        </nav>
+      </section>
+
+      <section class="card">
+        <h2>Crew Management</h2>
+        <form method="POST" action="/settings/crew" class="grid">
+          <label>Crew Name<input name="name" required /></label>
+          <label>
+            Active
+            <select name="active" required>
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </label>
+          <button type="submit">Add Crew Member</button>
+        </form>
+        <form method="POST" action="/settings/crew/import" enctype="multipart/form-data" class="grid">
+          <label class="full">
+            Bulk Import Crew (CSV or one name per line)
+            <textarea name="crew_import_text" rows="4" placeholder="name,active&#10;John Smith,1&#10;Jane Doe,0"></textarea>
+          </label>
+          <label class="full">
+            Or upload file (.csv/.txt)
+            <input type="file" name="crew_import_file" accept=".csv,.txt" />
+          </label>
+          <button type="submit">Import Crew</button>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Active</th>
+                <th>Edit</th>
+                <th>Set Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for member in crew %}
+              <tr>
+                <td>{{ member.name }}</td>
+                <td>{{ "Yes" if member.active else "No" }}</td>
+                <td>
+                  <form method="POST" action="/settings/crew/{{ member.id }}/update" class="inline">
+                    <input name="name" value="{{ member.name }}" required />
+                    <select name="active">
+                      <option value="1" {% if member.active %}selected{% endif %}>Active</option>
+                      <option value="0" {% if not member.active %}selected{% endif %}>Inactive</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/settings/crew/{{ member.id }}/active" class="inline">
+                    <input type="hidden" name="active" value="{{ 0 if member.active else 1 }}" />
+                    <button type="submit" class="secondary">{{ "Deactivate" if member.active else "Activate" }}</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

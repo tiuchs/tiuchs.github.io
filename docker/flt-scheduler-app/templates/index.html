@@ -19,7 +19,7 @@
         <div class="user-tools">
           <span class="subtle">Signed in as <strong>{{ auth_user.username }}</strong> ({{ auth_user.role }})</span>
           {% if is_admin %}
-          <a class="button secondary" href="/settings">Settings</a>
+          <a class="button secondary" href="/settings/admin">Settings</a>
           {% endif %}
           <form method="POST" action="/logout">
             <button type="submit" class="secondary">Sign Out</button>
@@ -56,7 +56,7 @@
                 <td>{{ flight.tail_number }}</td>
                 <td>
                   <a href="{{ flight.skyvector_url }}" target="_blank" rel="noopener noreferrer">
-                    {{ flight.origin }}-{{ flight.destination }}
+                    {{ flight.route_display }}
                   </a>
                 </td>
                 <td>{{ flight.crew }}</td>
@@ -84,64 +84,75 @@
 
       {% if can_schedule %}
       <section class="card">
-        <h2>Add Flight</h2>
+        <h2>{% if edit_flight %}Edit Flight{% else %}Add Flight{% endif %}</h2>
+        {% if edit_flight %}
+        <p class="subtle">
+          Editing mission <code>{{ edit_flight.mission_id }}</code>. Saving changed fields returns mission to <strong>planned</strong> for re-approval.
+          <a href="/?date={{ selected_date }}">Clear</a>
+        </p>
+        {% endif %}
         {% if not roster_crew or not aircraft_roster %}
         <p class="subtle">
-          Missing roster data. {% if is_admin %}Add active crew and aircraft in <a href="/settings">Settings</a>.{% else %}Contact an admin to add active crew and aircraft in Settings.{% endif %}
+          Missing roster data. {% if is_admin %}Add active crew and aircraft in <a href="/settings/admin">Settings</a>.{% else %}Contact an admin to add active crew and aircraft in Settings.{% endif %}
         </p>
         {% endif %}
         <form method="POST" action="/flights" class="grid">
+          <input type="hidden" name="flight_id" value="{{ form_defaults.flight_id }}" />
           <label>
             Date
-            <input name="flight_date" type="date" value="{{ selected_date }}" required />
+            <input name="flight_date" type="date" value="{{ form_defaults.flight_date }}" required />
           </label>
           <label>
             Launch
-            <input name="launch_time" type="time" required />
+            <input name="launch_time" type="time" value="{{ form_defaults.launch_time }}" required />
           </label>
           <label>
             Recovery
-            <input name="recovery_time" type="time" required />
+            <input name="recovery_time" type="time" value="{{ form_defaults.recovery_time }}" required />
           </label>
           <label>
             Type
             <select name="mission_type" required>
-              <option value="training">Training</option>
-              <option value="mission">Mission</option>
+              <option value="training" {% if form_defaults.mission_type == "training" %}selected{% endif %}>Training</option>
+              <option value="mission" {% if form_defaults.mission_type == "mission" %}selected{% endif %}>Mission</option>
             </select>
           </label>
           <label>
             Mission Title
-            <input name="mission_title" placeholder="Night route training" required />
+            <input name="mission_title" value="{{ form_defaults.mission_title }}" placeholder="Night route training" required />
           </label>
           <label>
             Tail Number
             <select name="tail_number" required>
               <option value="">Select Aircraft</option>
               {% for aircraft in aircraft_roster %}
-              <option value="{{ aircraft.tail_number }}">{{ aircraft.tail_number }}{% if aircraft.model %} ({{ aircraft.model }}){% endif %}</option>
+              <option value="{{ aircraft.tail_number }}" {% if form_defaults.tail_number == aircraft.tail_number %}selected{% endif %}>{{ aircraft.tail_number }}{% if aircraft.model %} ({{ aircraft.model }}){% endif %}</option>
               {% endfor %}
             </select>
           </label>
           <label>
             Origin
-            <input name="origin" value="KHLR" required />
+            <input name="origin" value="{{ form_defaults.origin }}" required />
+          </label>
+          <label>
+            Route (Optional)
+            <input name="route" value="{{ form_defaults.route }}" placeholder="22XS V198 ABC" />
           </label>
           <label>
             Destination
-            <input name="destination" value="KHLR" required />
+            <input name="destination" value="{{ form_defaults.destination }}" required />
           </label>
           <label>
             Pilot in Command
             <select name="pic_name" required>
               <option value="">Select PIC</option>
               {% for crew_user in roster_crew %}
-              <option value="{{ crew_user.name }}">{{ crew_user.name }}</option>
+              <option value="{{ crew_user.name }}" {% if form_defaults.pic_name == crew_user.name %}selected{% endif %}>{{ crew_user.name }}</option>
               {% endfor %}
             </select>
           </label>
           <label class="checkbox-wrap">
-            <input type="checkbox" name="pic_is_amc" value="1" />
+            <input type="checkbox" name="pic_is_amc" value="1" {% if form_defaults.pic_is_amc %}checked{% endif %} />
             PIC is also acting as AMC
           </label>
           <label>
@@ -149,31 +160,31 @@
             <select name="pilot_name" required>
               <option value="">Select Pilot</option>
               {% for crew_user in roster_crew %}
-              <option value="{{ crew_user.name }}">{{ crew_user.name }}</option>
+              <option value="{{ crew_user.name }}" {% if form_defaults.pilot_name == crew_user.name %}selected{% endif %}>{{ crew_user.name }}</option>
               {% endfor %}
             </select>
           </label>
           <label class="full">
             Crew Members
-            <input name="crew_members" placeholder="Crew chief, gunner, medic..." />
+            <input name="crew_members" value="{{ form_defaults.crew_members }}" placeholder="Crew chief, gunner, medic..." />
           </label>
           <label class="full">
             Non-rated Crew
-            <input name="non_rated_crew" placeholder="Observer, maintainer, etc." />
+            <input name="non_rated_crew" value="{{ form_defaults.non_rated_crew }}" placeholder="Observer, maintainer, etc." />
           </label>
           <label class="checkbox-wrap full">
-            <input type="checkbox" id="is_team_flight" name="is_team_flight" value="1" />
+            <input type="checkbox" id="is_team_flight" name="is_team_flight" value="1" {% if form_defaults.is_team_flight %}checked{% endif %} />
             Team flight (linked to AMC mission)
           </label>
           <label class="full hidden" id="amc_mission_id_wrap">
             AMC Mission ID
-            <input name="amc_mission_id" id="amc_mission_id" placeholder="2026042-001" />
+            <input name="amc_mission_id" id="amc_mission_id" value="{{ form_defaults.amc_mission_id }}" placeholder="2026042-001" />
           </label>
           <label class="full">
             Notes
-            <input name="notes" placeholder="Fuel stop at waypoint Bravo" />
+            <input name="notes" value="{{ form_defaults.notes }}" placeholder="Fuel stop at waypoint Bravo" />
           </label>
-          <button type="submit">Save Flight</button>
+          <button type="submit">{% if edit_flight %}Update Flight{% else %}Save Flight{% endif %}</button>
         </form>
       </section>
       {% endif %}
@@ -233,14 +244,20 @@
             <tbody>
               {% for flight in daily %}
               <tr>
-                <td><code>{{ flight.mission_id }}</code></td>
+                <td>
+                  {% if can_schedule %}
+                  <a href="/?date={{ selected_date }}&edit_mission_id={{ flight.mission_id }}"><code>{{ flight.mission_id }}</code></a>
+                  {% else %}
+                  <code>{{ flight.mission_id }}</code>
+                  {% endif %}
+                </td>
                 <td>{{ flight.launch_time }}-{{ flight.recovery_time }}</td>
                 <td>{{ flight.mission_type }}</td>
                 <td>{{ flight.mission_title }}</td>
                 <td>{{ flight.tail_number }}</td>
                 <td>
                   <a href="{{ flight.skyvector_url }}" target="_blank" rel="noopener noreferrer">
-                    {{ flight.origin }}-{{ flight.destination }}
+                    {{ flight.route_display }}
                   </a>
                 </td>
                 <td>{{ flight.pic_name }}{% if flight.pic_is_amc %} (AMC){% endif %}</td>
@@ -256,8 +273,18 @@
                     <input type="hidden" name="closed_out" value="1" />
                   </form>
                   <div class="inline">
-                    <input type="time" name="actual_takeoff" value="{{ flight.actual_takeoff }}" form="closeout-{{ flight.id }}" />
-                    <input type="time" name="actual_arrival" value="{{ flight.actual_arrival }}" form="closeout-{{ flight.id }}" />
+                    <input
+                      type="time"
+                      name="actual_takeoff"
+                      value="{{ flight.actual_takeoff }}"
+                      form="closeout-{{ flight.id }}"
+                    />
+                    <input
+                      type="time"
+                      name="actual_arrival"
+                      value="{{ flight.actual_arrival }}"
+                      form="closeout-{{ flight.id }}"
+                    />
                   </div>
                   {% else %}
                   {{ flight.actual_takeoff }}{% if flight.actual_takeoff and flight.actual_arrival %} - {% endif %}{{ flight.actual_arrival }}
