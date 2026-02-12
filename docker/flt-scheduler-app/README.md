@@ -14,6 +14,15 @@ Open:
 
 `http://localhost:8080`
 
+## Kubernetes Manifest
+
+- A Kubernetes manifest is included at:
+  - `docker/flt-scheduler-app/manifest.yaml`
+- It defines:
+  - `PersistentVolumeClaim` for SQLite data
+  - `Deployment` for the Flask app
+  - `Service` exposing port `8080`
+
 ## Authentication and roles
 
 - Sign in is required for app access.

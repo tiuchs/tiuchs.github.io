@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flt-scheduler-data
+  labels:
+    app: flt-scheduler
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flt-scheduler
+  labels:
+    app: flt-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flt-scheduler
+  template:
+    metadata:
+      labels:
+        app: flt-scheduler
+    spec:
+      containers:
+        - name: flt-scheduler
+          image: flt-scheduler:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SECRET_KEY
+              value: "change-me-in-production"
+            - name: DEFAULT_ADMIN_USER
+              value: "admin"
+            - name: DEFAULT_ADMIN_PASSWORD
+              value: "admin123"
+          volumeMounts:
+            - name: app-data
+              mountPath: /app/data
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: app-data
+          persistentVolumeClaim:
+            claimName: flt-scheduler-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flt-scheduler
+  labels:
+    app: flt-scheduler
+spec:
+  selector:
+    app: flt-scheduler
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
