@@ -27,6 +27,20 @@ spec:
       labels:
         app: flt-scheduler
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
       containers:
         - name: flt-scheduler
           image: flt-scheduler:latest
@@ -58,10 +72,10 @@ spec:
             timeoutSeconds: 2
           resources:
             requests:
-              cpu: 100m
+              cpu: "2"
               memory: 128Mi
             limits:
-              cpu: 500m
+              cpu: "4"
               memory: 512Mi
       volumes:
         - name: app-data

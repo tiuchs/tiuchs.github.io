@@ -14,6 +14,11 @@ Open:
 
 `http://localhost:8080`
 
+Notes:
+
+- This Compose setup works on both Intel/AMD (`amd64`) and ARM (`arm64`) hosts.
+- For multi-arch image publishing (instead of local build), use `docker buildx` with both platforms.
+
 ## Kubernetes Manifest
 
 - A Kubernetes manifest is included at:
@@ -22,6 +27,9 @@ Open:
   - `PersistentVolumeClaim` for SQLite data
   - `Deployment` for the Flask app
   - `Service` exposing port `8080`
+  - Node affinity for both `amd64` (Intel/AMD) and `arm64` processors
+- Note:
+  - The container image must be published as multi-arch (`linux/amd64` and `linux/arm64`) for this to work on mixed clusters.
 
 ## Authentication and roles
 

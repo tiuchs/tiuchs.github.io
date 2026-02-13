@@ -1,2 +1,17 @@
-FROM nginx:1-10-1-alpine
-COPY source dest 
+name: flt-scheduler
+
+services:
+  flt-scheduler:
+    build:
+      context: ./flt-scheduler-app
+      dockerfile: Dockerfile
+    image: flt-scheduler:local
+    ports:
+      - "8080:8080"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-change-me}
+      DEFAULT_ADMIN_USER: ${DEFAULT_ADMIN_USER:-admin}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-admin123}
+    volumes:
+      - ./flt-scheduler-app/data:/app/data
+    restart: unless-stopped
