@@ -17,7 +17,6 @@
           </div>
         </div>
         <div class="user-tools">
-          <a class="button secondary" href="/help">Help</a>
           <a class="button secondary" href="/">Back to Dashboard</a>
           <form method="POST" action="/logout">
             <button type="submit" class="secondary">Sign Out</button>
@@ -33,23 +32,9 @@
         </nav>
       </section>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <section class="flash-messages">
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                <span class="alert-message">{{ message }}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-              </div>
-            {% endfor %}
-          </section>
-        {% endif %}
-      {% endwith %}
-
       <section class="card">
         <h2>User Management</h2>
         <form method="POST" action="/settings/users" class="grid">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <label>Username<input name="username" required /></label>
           <label>Password<input name="password" type="password" required /></label>
           <label>
@@ -90,7 +75,6 @@
                 <td>{{ "Yes" if user.active else "No" }}</td>
                 <td>
                   <form method="POST" action="/settings/users/{{ user.id }}/role" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <select name="role">
                       <option value="user" {% if user.role == "user" %}selected{% endif %}>User</option>
                       <option value="scheduler" {% if user.role == "scheduler" %}selected{% endif %}>Scheduler</option>
@@ -102,14 +86,12 @@
                 </td>
                 <td>
                   <form method="POST" action="/settings/users/{{ user.id }}/active" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="active" value="{{ 0 if user.active else 1 }}" />
                     <button type="submit" class="secondary">{{ "Deactivate" if user.active else "Activate" }}</button>
                   </form>
                 </td>
                 <td>
                   <form method="POST" action="/settings/users/{{ user.id }}/password" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input name="password" type="password" placeholder="New password" required />
                     <button type="submit">Update</button>
                   </form>
@@ -124,7 +106,6 @@
       <section class="card">
         <h2>Website UI Settings</h2>
         <form method="POST" action="/settings/theme" class="inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <label>
             Theme
             <select name="theme">
@@ -134,42 +115,6 @@
           </label>
           <button type="submit">Save Theme</button>
         </form>
-        <form method="POST" action="/settings/timezone" class="inline" style="margin-top: 1rem;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <label>
-            Timezone
-            <select name="timezone">
-              <optgroup label="US Time Zones">
-                <option value="US/Eastern" {% if app_timezone == "US/Eastern" %}selected{% endif %}>US Eastern (ET)</option>
-                <option value="US/Central" {% if app_timezone == "US/Central" %}selected{% endif %}>US Central (CT)</option>
-                <option value="US/Mountain" {% if app_timezone == "US/Mountain" %}selected{% endif %}>US Mountain (MT)</option>
-                <option value="US/Pacific" {% if app_timezone == "US/Pacific" %}selected{% endif %}>US Pacific (PT)</option>
-                <option value="US/Alaska" {% if app_timezone == "US/Alaska" %}selected{% endif %}>US Alaska (AKT)</option>
-                <option value="US/Hawaii" {% if app_timezone == "US/Hawaii" %}selected{% endif %}>US Hawaii (HST)</option>
-              </optgroup>
-              <optgroup label="Common Time Zones">
-                <option value="UTC" {% if app_timezone == "UTC" %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
-                <option value="Europe/London" {% if app_timezone == "Europe/London" %}selected{% endif %}>London (GMT/BST)</option>
-                <option value="Europe/Paris" {% if app_timezone == "Europe/Paris" %}selected{% endif %}>Paris (CET/CEST)</option>
-                <option value="Asia/Tokyo" {% if app_timezone == "Asia/Tokyo" %}selected{% endif %}>Tokyo (JST)</option>
-                <option value="Asia/Shanghai" {% if app_timezone == "Asia/Shanghai" %}selected{% endif %}>Shanghai (CST)</option>
-                <option value="Australia/Sydney" {% if app_timezone == "Australia/Sydney" %}selected{% endif %}>Sydney (AEDT/AEST)</option>
-              </optgroup>
-            </select>
-          </label>
-          <button type="submit">Save Timezone</button>
-        </form>
-      </section>
-
-      <section class="card">
-        <h2>Database Backups</h2>
-        <p class="subtle">Backups are created daily automatically. Manual backups retain for 7 days.</p>
-        <form method="POST" action="/settings/backup/create" class="inline" style="margin-bottom: 1rem;">
-          <button type="submit">Create Backup Now</button>
-        </form>
-        <div id="backup-list">
-          <p class="subtle">Loading backups...</p>
-        </div>
       </section>
 
       <section class="card">
@@ -179,12 +124,6 @@
           <label>End Date<input type="date" name="end_date" value="{{ export_end }}" required /></label>
           <button type="submit">Export CSV</button>
         </form>
-      </section>
-
-      <section class="card">
-        <h2>Deleted Flights</h2>
-        <p class="subtle">View and manage soft-deleted flights.</p>
-        <a href="/settings/deleted-flights" class="button secondary">View Deleted Flights</a>
       </section>
 
       <section class="card">
@@ -219,65 +158,5 @@
         {% endif %}
       </section>
     </main>
-
-    <footer class="site-footer">
-      <div class="footer-content">
-        <p>&copy; 2026 1-227 AB Flight Scheduler. All rights reserved.</p>
-        <p class="subtle">Army Training Program Management System | <a href="/help">Help & Documentation</a></p>
-      </div>
-    </footer>
-
-    <script>
-      // Load and display available backups
-      async function loadBackups() {
-        try {
-          const response = await fetch('/settings/backup/list');
-          const backups = await response.json();
-          const container = document.getElementById('backup-list');
-
-          if (backups.length === 0) {
-            container.innerHTML = '<p class="subtle">No backups available yet.</p>';
-            return;
-          }
-
-          let html = '<div class="table-wrap"><table><thead><tr>';
-          html += '<th>Backup File</th><th>Size</th><th>Created (UTC)</th><th>Age</th><th>Download</th>';
-          html += '</tr></thead><tbody>';
-
-          backups.forEach(backup => {
-            html += '<tr>';
-            html += `<td><code>${backup.filename}</code></td>`;
-            html += `<td>${backup.size_mb} MB</td>`;
-            html += `<td>${backup.created}</td>`;
-            html += `<td>${backup.age_days} days</td>`;
-            html += `<td><a href="/settings/backup/download/${backup.filename}" class="button secondary">Download</a></td>`;
-            html += '</tr>';
-          });
-
-          html += '</tbody></table></div>';
-          container.innerHTML = html;
-        } catch (error) {
-          document.getElementById('backup-list').innerHTML =
-            '<p class="subtle">Error loading backups: ' + error.message + '</p>';
-        }
-      }
-
-      // Load backups when page loads
-      document.addEventListener('DOMContentLoaded', loadBackups);
-
-      // Auto-dismiss success alerts after 10 seconds
-      document.addEventListener('DOMContentLoaded', function() {
-        const successAlerts = document.querySelectorAll('.alert-success');
-        successAlerts.forEach(function(alert) {
-          setTimeout(function() {
-            alert.style.opacity = '0';
-            alert.style.transition = 'opacity 0.5s ease-out';
-            setTimeout(function() {
-              alert.remove();
-            }, 500);
-          }, 10000);
-        });
-      });
-    </script>
   </body>
 </html>

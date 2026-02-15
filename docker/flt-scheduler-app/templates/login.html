@@ -14,10 +14,18 @@
           <h1>1-227 AB Flight Scheduler Sign In</h1>
         </div>
         <p class="subtle">Use your assigned role account to access scheduling and approvals.</p>
-        {% if error %}
-        <p class="error">{{ error }}</p>
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span class="alert-message">{{ message }}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
         <form method="POST" action="/login" class="grid">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <label>
             Username
             <input name="username" required />
@@ -30,5 +38,23 @@
         </form>
       </section>
     </main>
+    <script>
+      // Auto-dismiss success alerts after 10 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+        const successAlerts = document.querySelectorAll('.alert-success');
+        successAlerts.forEach(function(alert) {
+          setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(function() {
+              alert.remove();
+            }, 500);
+          }, 10000);
+        });
+      });
+    </script>
+    <footer class="app-footer">
+      <p class="version-info">1-227 AB Flight Scheduler <span class="version-tag">v{{ app_version }}</span></p>
+    </footer>
   </body>
 </html>

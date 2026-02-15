@@ -18,56 +18,12 @@
         </div>
         <div class="user-tools">
           <span class="subtle">Signed in as <strong>{{ auth_user.username }}</strong> ({{ auth_user.role }})</span>
-          <a class="button secondary" href="/help">Help</a>
           {% if is_admin %}
           <a class="button secondary" href="/settings/admin">Settings</a>
           {% endif %}
           <form method="POST" action="/logout">
             <button type="submit" class="secondary">Sign Out</button>
           </form>
-        </div>
-      </section>
-
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <section class="flash-messages">
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                <span class="alert-message">{{ message }}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
-              </div>
-            {% endfor %}
-          </section>
-        {% endif %}
-      {% endwith %}
-
-      <!-- Dashboard Stats -->
-      <section class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-total">{{ daily|length if daily else 0 }}</div>
-          <div class="stat-label">Total Flights Today</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-approved">{{ daily|selectattr('status', 'equalto', 'approved')|list|length if daily else 0 }}</div>
-          <div class="stat-label">Approved</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-planned">{{ daily|selectattr('status', 'equalto', 'planned')|list|length if daily else 0 }}</div>
-          <div class="stat-label">Pending Approval</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-hours">
-            {% set total_hours = namespace(value=0.0) %}
-            {% if daily %}
-              {% for flight in daily %}
-                {% if flight.actual_hours_decimal %}
-                  {% set total_hours.value = total_hours.value + (flight.actual_hours_decimal|float) %}
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-            {{ "%.1f"|format(total_hours.value) }}
-          </div>
-          <div class="stat-label">Hours Flown</div>
         </div>
       </section>
 
@@ -141,7 +97,6 @@
         </p>
         {% endif %}
         <form method="POST" action="/flights" class="grid">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="flight_id" value="{{ form_defaults.flight_id }}" />
           <label>
             Date
@@ -226,15 +181,6 @@
             <input name="amc_mission_id" id="amc_mission_id" value="{{ form_defaults.amc_mission_id }}" placeholder="2026042-001" />
           </label>
           <label class="full">
-            ATP Company
-            <select name="atp_company" required>
-              <option value="" disabled {% if not form_defaults.atp_company or form_defaults.atp_company == "" %}selected{% endif %}>Select ATP Company</option>
-              <option value="A Co" {% if form_defaults.atp_company == "A Co" %}selected{% endif %}>A Co</option>
-              <option value="B Co" {% if form_defaults.atp_company == "B Co" %}selected{% endif %}>B Co</option>
-              <option value="C Co" {% if form_defaults.atp_company == "C Co" %}selected{% endif %}>C Co</option>
-            </select>
-          </label>
-          <label class="full">
             Notes
             <input name="notes" value="{{ form_defaults.notes }}" placeholder="Fuel stop at waypoint Bravo" />
           </label>
@@ -270,32 +216,28 @@
       <section class="card">
         <h2>Daily Consolidated Missions ({{ selected_date }})</h2>
         {% if daily %}
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Search by mission ID, tail, crew, type..." />
-          <button type="button" onclick="clearSearch()">Clear</button>
-        </div>
         <div class="table-wrap">
-          <table id="dailyTable">
+          <table>
             <thead>
               <tr>
-                <th class="sortable" data-sort="mission_id">Mission ID</th>
-                <th class="sortable" data-sort="time">Time</th>
-                <th class="sortable" data-sort="type">Type</th>
-                <th class="sortable" data-sort="mission">Mission</th>
-                <th class="sortable" data-sort="tail">Tail</th>
+                <th>Mission ID</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Mission</th>
+                <th>Tail</th>
                 <th>Route</th>
-                <th class="sortable" data-sort="pic">PIC</th>
-                <th class="sortable" data-sort="pilot">Pilot</th>
+                <th>PIC</th>
+                <th>Pilot</th>
                 <th>Crew Members</th>
                 <th>Non-rated Crew</th>
-                <th class="sortable" data-sort="team">Team</th>
+                <th>Team</th>
                 <th>AMC Mission</th>
                 <th>Actuals</th>
                 <th>Closeout Comments</th>
                 <th>Cancel Reasons</th>
-                <th class="sortable" data-sort="hours">Hours</th>
-                <th class="sortable" data-sort="closedout">Closed Out</th>
-                <th class="sortable" data-sort="status">Status</th>
+                <th>Hours</th>
+                <th>Closed Out</th>
+                <th>Status</th>
                 {% if can_approve or can_schedule %}<th>Actions</th>{% endif %}
               </tr>
             </thead>
@@ -327,7 +269,6 @@
                 <td>
                   {% if can_schedule %}
                   <form id="closeout-{{ flight.id }}" method="POST" action="/flights/{{ flight.id }}/closeout" class="hidden">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="focus_date" value="{{ selected_date }}" />
                     <input type="hidden" name="closed_out" value="1" />
                   </form>
@@ -385,13 +326,11 @@
                   <div class="actions">
                     {% if can_approve %}
                     <form method="POST" action="/flights/{{ flight.id }}/status">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                       <input type="hidden" name="focus_date" value="{{ selected_date }}" />
                       <input type="hidden" name="status" value="approved" />
                       <button type="submit">Approve</button>
                     </form>
                     <form method="POST" action="/flights/{{ flight.id }}/status">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                       <input type="hidden" name="focus_date" value="{{ selected_date }}" />
                       <input type="hidden" name="status" value="cancelled" />
                       <button type="submit" class="secondary">Cancel</button>
@@ -400,7 +339,6 @@
                     {% if can_schedule %}
                     <button type="submit" class="secondary" form="closeout-{{ flight.id }}">Close Out</button>
                     <form method="POST" action="/flights/{{ flight.id }}/delete">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                       <input type="hidden" name="focus_date" value="{{ selected_date }}" />
                       <button type="submit" class="danger">Delete</button>
                     </form>
@@ -419,30 +357,6 @@
       </section>
 
     </main>
-
-    <!-- Confirmation Modal -->
-    <div id="confirmModal" class="modal-overlay">
-      <div class="modal">
-        <div class="modal-header">
-          <h3 id="modalTitle">Confirm Action</h3>
-        </div>
-        <div class="modal-body">
-          <p id="modalMessage">Are you sure you want to proceed?</p>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="secondary" onclick="closeModal()">Cancel</button>
-          <button type="button" class="danger" id="modalConfirm">Confirm</button>
-        </div>
-      </div>
-    </div>
-
-    <footer class="site-footer">
-      <div class="footer-content">
-        <p>&copy; 2026 1-227 AB Flight Scheduler. All rights reserved.</p>
-        <p class="subtle">Army Training Program Management System | <a href="/help">Help & Documentation</a></p>
-      </div>
-    </footer>
-
     <script>
       const teamFlight = document.getElementById("is_team_flight");
       const amcWrap = document.getElementById("amc_mission_id_wrap");
@@ -456,223 +370,6 @@
         teamFlight.addEventListener("change", sync);
         sync();
       }
-
-      // Auto-dismiss success alerts after 10 seconds
-      document.addEventListener('DOMContentLoaded', function() {
-        const successAlerts = document.querySelectorAll('.alert-success');
-        successAlerts.forEach(function(alert) {
-          setTimeout(function() {
-            alert.style.opacity = '0';
-            alert.style.transition = 'opacity 0.5s ease-out';
-            setTimeout(function() {
-              alert.remove();
-            }, 500);
-          }, 10000);
-        });
-      });
-
-      // TABLE SORTING
-      let currentSort = { column: null, direction: 'asc' };
-
-      function sortTable(columnIndex, sortType) {
-        const table = document.getElementById('dailyTable');
-        if (!table) return;
-
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        const headers = table.querySelectorAll('th.sortable');
-
-        // Toggle direction if same column
-        if (currentSort.column === columnIndex) {
-          currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-          currentSort.column = columnIndex;
-          currentSort.direction = 'asc';
-        }
-
-        // Update header classes
-        headers.forEach(h => h.classList.remove('asc', 'desc'));
-        headers[columnIndex].classList.add(currentSort.direction);
-
-        // Sort rows
-        rows.sort((a, b) => {
-          const aCell = a.cells[columnIndex];
-          const bCell = b.cells[columnIndex];
-          if (!aCell || !bCell) return 0;
-
-          let aVal = aCell.textContent.trim();
-          let bVal = bCell.textContent.trim();
-
-          // Handle different data types
-          if (sortType === 'hours') {
-            aVal = parseFloat(aVal) || 0;
-            bVal = parseFloat(bVal) || 0;
-          } else if (sortType === 'closedout') {
-            aVal = aVal.startsWith('Yes') ? 1 : 0;
-            bVal = bVal.startsWith('Yes') ? 1 : 0;
-          }
-
-          if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
-          if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
-          return 0;
-        });
-
-        // Re-append sorted rows
-        rows.forEach(row => tbody.appendChild(row));
-      }
-
-      // Initialize sortable headers
-      document.addEventListener('DOMContentLoaded', function() {
-        const headers = document.querySelectorAll('th.sortable');
-        headers.forEach((header, index) => {
-          header.addEventListener('click', () => {
-            const sortType = header.dataset.sort;
-            sortTable(index, sortType);
-          });
-        });
-      });
-
-      // SEARCH/FILTER
-      function filterTable() {
-        const input = document.getElementById('searchInput');
-        const filter = input.value.toLowerCase();
-        const table = document.getElementById('dailyTable');
-        if (!table) return;
-
-        const rows = table.querySelectorAll('tbody tr');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-          const text = row.textContent.toLowerCase();
-          if (text.includes(filter)) {
-            row.style.display = '';
-            visibleCount++;
-          } else {
-            row.style.display = 'none';
-          }
-        });
-
-        // Update stats if filter is active
-        if (filter) {
-          const statTotal = document.getElementById('stat-total');
-          if (statTotal) {
-            statTotal.textContent = visibleCount;
-          }
-        }
-      }
-
-      function clearSearch() {
-        const input = document.getElementById('searchInput');
-        if (input) {
-          input.value = '';
-          filterTable();
-          // Reset stats
-          location.reload();
-        }
-      }
-
-      // Initialize search
-      document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-          searchInput.addEventListener('input', filterTable);
-        }
-      });
-
-      // CONFIRMATION MODAL
-      let confirmCallback = null;
-
-      function showConfirmation(title, message, callback) {
-        const modal = document.getElementById('confirmModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const confirmBtn = document.getElementById('modalConfirm');
-
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.classList.add('active');
-
-        confirmCallback = callback;
-
-        // Focus on confirm button
-        setTimeout(() => confirmBtn.focus(), 100);
-      }
-
-      function closeModal() {
-        const modal = document.getElementById('confirmModal');
-        modal.classList.remove('active');
-        confirmCallback = null;
-      }
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const confirmBtn = document.getElementById('modalConfirm');
-        if (confirmBtn) {
-          confirmBtn.addEventListener('click', () => {
-            if (confirmCallback) {
-              confirmCallback();
-            }
-            closeModal();
-          });
-        }
-
-        // Close modal on overlay click
-        const modal = document.getElementById('confirmModal');
-        if (modal) {
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-              closeModal();
-            }
-          });
-        }
-
-        // ESC key to close modal
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            closeModal();
-          }
-        });
-      });
-
-      // ATTACH CONFIRMATIONS TO FORMS
-      document.addEventListener('DOMContentLoaded', function() {
-        // Delete button confirmations
-        const deleteForms = document.querySelectorAll('form[action*="/delete"]');
-        deleteForms.forEach(form => {
-          const btn = form.querySelector('button[type="submit"]');
-          if (btn) {
-            btn.addEventListener('click', (e) => {
-              e.preventDefault();
-              const missionId = form.closest('tr')?.querySelector('code')?.textContent || 'this flight';
-              showConfirmation(
-                'Delete Flight',
-                `Are you sure you want to delete ${missionId}? This action cannot be undone.`,
-                () => form.submit()
-              );
-            });
-          }
-        });
-
-        // Cancel button confirmations
-        const cancelForms = document.querySelectorAll('form[action*="/status"] input[value="cancelled"]');
-        cancelForms.forEach(input => {
-          const form = input.closest('form');
-          const btn = form?.querySelector('button[type="submit"]');
-          if (btn) {
-            btn.addEventListener('click', (e) => {
-              e.preventDefault();
-              const missionId = form.closest('tr')?.querySelector('code')?.textContent || 'this flight';
-              showConfirmation(
-                'Cancel Flight',
-                `Are you sure you want to cancel ${missionId}?`,
-                () => form.submit()
-              );
-            });
-          }
-        });
-      });
     </script>
-    <footer class="app-footer">
-      <p class="version-info">1-227 AB Flight Scheduler <span class="version-tag">v{{ app_version }}</span></p>
-    </footer>
   </body>
 </html>

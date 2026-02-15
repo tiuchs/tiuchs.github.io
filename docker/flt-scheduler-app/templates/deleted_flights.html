@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deleted Flights - 1-227 AB Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+            <h1>1-227 AB Flight Scheduler - Deleted Flights</h1>
+            <p class="subtle">Recover or permanently delete soft-deleted flights.</p>
+          </div>
+        </div>
+        <div class="user-tools">
+          <a class="button secondary" href="/settings/admin">Back to Settings</a>
+          <a class="button secondary" href="/">Dashboard</a>
+          <form method="POST" action="/logout">
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="flash-messages">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      <section class="card">
+        <h2>Soft-Deleted Flights ({{ deleted_flights|length }})</h2>
+        {% if deleted_flights %}
+        <p class="subtle" style="margin-bottom: 1rem;">
+          These flights have been deleted but can be restored. Use "Purge" to permanently remove a flight from the database.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Deleted</th>
+                <th>Mission ID</th>
+                <th>Date</th>
+                <th>Launch</th>
+                <th>Recovery</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Tail</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for flight in deleted_flights %}
+              <tr>
+                <td>{{ flight.deleted_at }}</td>
+                <td><code>{{ flight.mission_id }}</code></td>
+                <td>{{ flight.flight_date }}</td>
+                <td>{{ flight.launch_time }}</td>
+                <td>{{ flight.recovery_time }}</td>
+                <td>
+                  <span class="badge {% if flight.mission_type == 'mission' %}badge-mission{% else %}badge-training{% endif %}">
+                    {{ flight.mission_type }}
+                  </span>
+                </td>
+                <td>{{ flight.mission_title }}</td>
+                <td>{{ flight.tail_number }}</td>
+                <td>{{ flight.origin }}</td>
+                <td>{{ flight.destination }}</td>
+                <td>
+                  {% if flight.status == 'approved' %}
+                  <span class="badge badge-success">Approved</span>
+                  {% elif flight.status == 'cancelled' %}
+                  <span class="badge badge-danger">Cancelled</span>
+                  {% else %}
+                  <span class="badge badge-warning">Planned</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <form method="POST" action="/flights/{{ flight.id }}/restore" style="margin: 0;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                      <button type="submit" class="secondary" style="font-size: 0.875rem; padding: 0.25rem 0.5rem;">Restore</button>
+                    </form>
+                    <form method="POST" action="/flights/{{ flight.id }}/purge" style="margin: 0;" onsubmit="return confirm('Permanently delete mission {{ flight.mission_id }}? This cannot be undone!');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                      <button type="submit" class="danger" style="font-size: 0.875rem; padding: 0.25rem 0.5rem; background: #dc3545; border-color: #dc3545;">Purge</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="subtle">No deleted flights.</p>
+        {% endif %}
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>&copy; 2026 1-227 AB Flight Scheduler. All rights reserved.</p>
+        <p class="subtle">Army Training Program Management System | <a href="/help">Help & Documentation</a></p>
+      </div>
+    </footer>
+
+    <script>
+      // Auto-dismiss success alerts after 10 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+        const successAlerts = document.querySelectorAll('.alert-success');
+        successAlerts.forEach(function(alert) {
+          setTimeout(function() {
+            alert.style.opacity = '0';
+            alert.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(function() {
+              alert.remove();
+            }, 500);
+          }, 10000);
+        });
+      });
+    </script>
+  </body>
+</html>

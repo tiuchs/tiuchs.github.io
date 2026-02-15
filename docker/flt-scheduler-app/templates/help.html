@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ ui_theme }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Help & Documentation - 1-227 AB Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+      .help-nav {
+        position: sticky;
+        top: 0;
+        background: var(--bg-primary);
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        z-index: 10;
+      }
+      .help-nav a {
+        margin-right: 1rem;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      .help-nav a:hover {
+        color: var(--accent-color);
+      }
+      .help-section {
+        scroll-margin-top: 80px;
+      }
+      .help-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .help-card h3 {
+        margin-top: 0;
+        color: var(--accent-color);
+      }
+      .command-box {
+        background: var(--bg-tertiary);
+        border-left: 4px solid var(--accent-color);
+        padding: 1rem;
+        margin: 1rem 0;
+        font-family: monospace;
+        overflow-x: auto;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .status-ok { background: #22c55e; color: white; }
+      .status-warning { background: #f59e0b; color: white; }
+      .status-error { background: #ef4444; color: white; }
+      .help-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+      .help-link-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        transition: transform 0.2s;
+      }
+      .help-link-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-color);
+      }
+      .help-link-card a {
+        text-decoration: none;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      th, td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+      th {
+        background: var(--bg-secondary);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+            <h1>Help & Documentation</h1>
+            <p class="subtle">Everything you need to use the Flight Scheduler</p>
+          </div>
+        </div>
+        <div class="user-tools">
+          <a class="button secondary" href="/">Back to Dashboard</a>
+          <form method="POST" action="/logout">
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      <nav class="help-nav">
+        <a href="#getting-started">Getting Started</a>
+        <a href="#backups">Backups</a>
+        <a href="#health">Health Monitoring</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#faq">FAQ</a>
+        <a href="#commands">Commands</a>
+        <a href="#documentation">Full Docs</a>
+      </nav>
+
+      <!-- Getting Started -->
+      <section id="getting-started" class="help-section">
+        <div class="card">
+          <h2>Getting Started</h2>
+
+          <div class="help-card">
+            <h3>🔐 User Roles</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Permissions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>User</strong></td>
+                  <td>View flights and export daily CSV</td>
+                </tr>
+                <tr>
+                  <td><strong>Scheduler</strong></td>
+                  <td>+ Create, edit, and delete flight schedules</td>
+                </tr>
+                <tr>
+                  <td><strong>Approver</strong></td>
+                  <td>+ Approve and cancel flight status</td>
+                </tr>
+                <tr>
+                  <td><strong>Admin</strong></td>
+                  <td>+ Full system access, settings, backups, user management</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="help-card">
+            <h3>📅 Daily Workflow</h3>
+            <ol>
+              <li><strong>Morning:</strong> Review today's flight schedule on the dashboard</li>
+              <li><strong>Planning:</strong> Schedulers add new flights as needed</li>
+              <li><strong>Approval:</strong> Approvers review and approve planned flights</li>
+              <li><strong>Execution:</strong> Track flight status throughout the day</li>
+              <li><strong>Closeout:</strong> Complete flight closeouts with actual times</li>
+              <li><strong>Export:</strong> Download daily CSV for crew notifications</li>
+            </ol>
+          </div>
+
+          <div class="help-card">
+            <h3>🔧 Initial Setup (Admins)</h3>
+            <ol>
+              <li>Change the default admin password immediately</li>
+              <li>Add crew members in <a href="/settings/crew">Crew Management</a></li>
+              <li>Add aircraft in <a href="/settings/aircraft">Aircraft Management</a></li>
+              <li>Create user accounts with appropriate roles</li>
+              <li>Set website theme preference (light/dark)</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Backups -->
+      <section id="backups" class="help-section">
+        <div class="card">
+          <h2>Database Backups</h2>
+
+          <div class="help-card">
+            <h3>✅ Automatic Backups</h3>
+            <p><strong>You're protected automatically!</strong></p>
+            <ul>
+              <li>Backups run every 24 hours</li>
+              <li>A backup is created each time the app starts</li>
+              <li>Last 7 days of backups are kept</li>
+              <li>Old backups are automatically deleted</li>
+              <li>All backups are integrity-verified</li>
+            </ul>
+          </div>
+
+          <div class="help-card">
+            <h3>📦 Manual Backups (Admins)</h3>
+            <p><strong>When to create a manual backup:</strong></p>
+            <ul>
+              <li>Before making major changes (bulk deletions, imports)</li>
+              <li>Before software updates</li>
+              <li>At the end of important operations periods</li>
+              <li>Before database maintenance</li>
+            </ul>
+            <p><strong>How:</strong> Go to <a href="/settings/admin">Settings → Admin Settings</a> → Click "Create Backup Now"</p>
+          </div>
+
+          <div class="help-card">
+            <h3>⬇️ Downloading Backups</h3>
+            <p>Admins can download backups for off-site storage:</p>
+            <ol>
+              <li>Navigate to <a href="/settings/admin">Settings → Admin Settings</a></li>
+              <li>Scroll to "Database Backups" section</li>
+              <li>Click "Download" next to any backup</li>
+              <li>Save to external drive or cloud storage</li>
+            </ol>
+            <p class="subtle">💡 Best Practice: Download a backup weekly for disaster recovery</p>
+          </div>
+
+          <div class="help-card">
+            <h3>🔄 Restoring from Backup</h3>
+            <div class="command-box">
+              # Stop the application<br>
+              docker compose -f docker/flt-scheduler down<br>
+              <br>
+              # Copy backup to main database<br>
+              cp data/backups/scheduler-backup-YYYYMMDD-HHMMSS.db data/scheduler.db<br>
+              <br>
+              # Start the application<br>
+              docker compose -f docker/flt-scheduler up -d
+            </div>
+            <p class="status-badge status-warning">⚠️ Warning: Restoring will replace all current data!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Health Monitoring -->
+      <section id="health" class="help-section">
+        <div class="card">
+          <h2>Health Monitoring</h2>
+
+          <div class="help-card">
+            <h3>🏥 System Health Status</h3>
+            <p>The application monitors its own health automatically:</p>
+            <ul>
+              <li><strong>Database Connectivity:</strong> Can the app access the database?</li>
+              <li><strong>Database Integrity:</strong> Is the database structure valid?</li>
+              <li><strong>Disk Space:</strong> Is there enough free space?</li>
+              <li><strong>Backups:</strong> Are backups being created successfully?</li>
+            </ul>
+          </div>
+
+          <div class="help-card">
+            <h3>📊 Health Check Endpoint</h3>
+            <div class="command-box">
+              curl http://localhost:8080/health
+            </div>
+            <p><strong>Status Indicators:</strong></p>
+            <ul>
+              <li><span class="status-badge status-ok">Healthy</span> - All systems operational</li>
+              <li><span class="status-badge status-warning">Degraded</span> - Minor issues (still functional)</li>
+              <li><span class="status-badge status-error">Unhealthy</span> - Critical issues (needs attention)</li>
+            </ul>
+          </div>
+
+          <div class="help-card">
+            <h3>🚨 Warning Signs</h3>
+            <p><strong>Take action if you see:</strong></p>
+            <ul>
+              <li>❌ Application won't start</li>
+              <li>❌ "Database corrupted" in logs</li>
+              <li>❌ Can't create backups</li>
+              <li>⚠️ Slow performance</li>
+              <li>⚠️ Frequent "database locked" errors</li>
+              <li>⚠️ Disk space under 100MB</li>
+            </ul>
+            <p><strong>First Response:</strong> Check <a href="#troubleshooting">Troubleshooting</a> section below</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Troubleshooting -->
+      <section id="troubleshooting" class="help-section">
+        <div class="card">
+          <h2>Troubleshooting</h2>
+
+          <div class="help-card">
+            <h3>🔧 Common Issues & Solutions</h3>
+
+            <h4>Problem: Can't Access Website</h4>
+            <div class="command-box">
+              # Check if container is running<br>
+              docker compose -f docker/flt-scheduler ps<br>
+              <br>
+              # Restart the application<br>
+              docker compose -f docker/flt-scheduler restart
+            </div>
+
+            <h4>Problem: "Database is Locked"</h4>
+            <p><strong>Solution:</strong> Wait 5-10 seconds and try again. The system automatically retries locked operations.</p>
+
+            <h4>Problem: Changes Not Saving</h4>
+            <p><strong>Check:</strong></p>
+            <ul>
+              <li>Are you logged in?</li>
+              <li>Do you have the right role (Scheduler/Admin)?</li>
+              <li>Are all required fields filled?</li>
+            </ul>
+
+            <h4>Problem: Backup Failed</h4>
+            <div class="command-box">
+              # Check disk space<br>
+              df -h docker/flt-scheduler-app/data/
+            </div>
+            <p><strong>Solution:</strong> Free up space if less than 100MB available</p>
+          </div>
+
+          <div class="help-card">
+            <h3>📋 View Application Logs</h3>
+            <div class="command-box">
+              # View recent logs<br>
+              docker compose -f docker/flt-scheduler logs --tail=100<br>
+              <br>
+              # Follow logs in real-time<br>
+              docker compose -f docker/flt-scheduler logs -f<br>
+              <br>
+              # Search for errors<br>
+              docker compose -f docker/flt-scheduler logs | grep -i error
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h3>🆘 Emergency: Database Corruption</h3>
+            <p class="status-badge status-error">Critical Issue - Immediate Action Required</p>
+            <ol>
+              <li>Stop the application immediately</li>
+              <li>Locate the latest backup in data/backups/</li>
+              <li>Copy the backup to replace the main database</li>
+              <li>Restart the application</li>
+              <li>Verify data is correct</li>
+            </ol>
+            <p class="subtle">💡 See "Restoring from Backup" in Backups section above</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="help-section">
+        <div class="card">
+          <h2>Frequently Asked Questions</h2>
+
+          <div class="help-card">
+            <h3>How do I change my password?</h3>
+            <p>Currently, only admins can reset passwords. Contact your administrator or go to <a href="/settings/admin">Settings → Admin Settings</a> (admin only).</p>
+          </div>
+
+          <div class="help-card">
+            <h3>How many users can use the system simultaneously?</h3>
+            <p>The system supports 10-20 active users comfortably. Thanks to Write-Ahead Logging, multiple users can view and edit data concurrently without "database locked" errors.</p>
+          </div>
+
+          <div class="help-card">
+            <h3>What happens if the server crashes?</h3>
+            <p>Your data is protected! The latest backup (max 24 hours old) can be restored. All completed transactions are preserved thanks to database crash recovery features.</p>
+          </div>
+
+          <div class="help-card">
+            <h3>Can I manually delete old backups?</h3>
+            <p>Yes (admins only). Backups older than 7 days are auto-deleted, but you can manually delete backups from the data/backups/ directory if needed. Keep at least one recent backup!</p>
+          </div>
+
+          <div class="help-card">
+            <h3>Why do I see multiple database files?</h3>
+            <p>You'll see three files:</p>
+            <ul>
+              <li><code>scheduler.db</code> - Main database (your data)</li>
+              <li><code>scheduler.db-wal</code> - Write-Ahead Log (temporary)</li>
+              <li><code>scheduler.db-shm</code> - Shared memory (temporary)</li>
+            </ul>
+            <p class="status-badge status-warning">⚠️ Never delete WAL or SHM files while the app is running!</p>
+          </div>
+
+          <div class="help-card">
+            <h3>How do I export flight data?</h3>
+            <p><strong>Daily Export:</strong> Click "Export CSV" on the daily view or visit <code>/daily.csv?date=YYYY-MM-DD</code></p>
+            <p><strong>Date Range Export (Admin):</strong> Go to <a href="/settings/admin">Settings → Admin Settings</a> → "Export Scheduled Flights"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Commands -->
+      <section id="commands" class="help-section">
+        <div class="card">
+          <h2>Quick Reference Commands</h2>
+
+          <div class="help-card">
+            <h3>🖥️ Application Control</h3>
+            <div class="command-box">
+              # Start application<br>
+              docker compose -f docker/flt-scheduler up -d<br>
+              <br>
+              # Stop application<br>
+              docker compose -f docker/flt-scheduler down<br>
+              <br>
+              # Restart application<br>
+              docker compose -f docker/flt-scheduler restart<br>
+              <br>
+              # Check status<br>
+              docker compose -f docker/flt-scheduler ps
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h3>📊 Health & Monitoring</h3>
+            <div class="command-box">
+              # Check application health<br>
+              curl -s http://localhost:8080/health | python3 -m json.tool<br>
+              <br>
+              # View logs<br>
+              docker compose -f docker/flt-scheduler logs --tail=50<br>
+              <br>
+              # Check disk space<br>
+              df -h docker/flt-scheduler-app/data/
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h3>💾 Backup Commands</h3>
+            <div class="command-box">
+              # List backups<br>
+              ls -lh docker/flt-scheduler-app/data/backups/<br>
+              <br>
+              # Count backups<br>
+              ls -1 docker/flt-scheduler-app/data/backups/ | wc -l<br>
+              <br>
+              # Find specific date backup<br>
+              ls docker/flt-scheduler-app/data/backups/ | grep 20260214
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Full Documentation -->
+      <section id="documentation" class="help-section">
+        <div class="card">
+          <h2>Complete Documentation</h2>
+
+          <p>For detailed information, refer to the complete documentation files:</p>
+
+          <div class="help-grid">
+            <div class="help-link-card">
+              <h3>📘 User Guide</h3>
+              <p class="subtle">Comprehensive guide with troubleshooting, best practices, and FAQ</p>
+              <p><strong>Location:</strong> <code>USER_GUIDE.md</code></p>
+            </div>
+
+            <div class="help-link-card">
+              <h3>⚡ Quick Reference</h3>
+              <p class="subtle">Quick reference card for daily operations and emergencies</p>
+              <p><strong>Location:</strong> <code>QUICK_REFERENCE.md</code></p>
+            </div>
+
+            <div class="help-link-card">
+              <h3>🔄 Backup Workflow</h3>
+              <p class="subtle">Visual guide to backup system with flowcharts and scenarios</p>
+              <p><strong>Location:</strong> <code>BACKUP_WORKFLOW.md</code></p>
+            </div>
+
+            <div class="help-link-card">
+              <h3>🔧 Technical Guide</h3>
+              <p class="subtle">Technical reference and installation guide</p>
+              <p><strong>Location:</strong> <code>README.md</code></p>
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h3>📂 Documentation Access</h3>
+            <p>All documentation files are located in:</p>
+            <div class="command-box">
+              docker/flt-scheduler-app/
+            </div>
+            <p>You can view these files using any text editor or markdown viewer.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Support -->
+      <section class="card">
+        <h2>Getting Additional Help</h2>
+
+        <div class="help-card">
+          <h3>📞 Contact Your Administrator</h3>
+          <p>For account issues, permissions, or system problems, contact your system administrator.</p>
+        </div>
+
+        <div class="help-card">
+          <h3>🐛 Report Issues</h3>
+          <p>If you encounter bugs or have feature requests, document:</p>
+          <ul>
+            <li>What you were trying to do</li>
+            <li>What happened instead</li>
+            <li>Error messages (if any)</li>
+            <li>Steps to reproduce the issue</li>
+          </ul>
+        </div>
+
+        <div class="help-card">
+          <h3>📚 Additional Resources</h3>
+          <p><strong>System Version:</strong> Flight Scheduler MVP v1.0</p>
+          <p><strong>Last Updated:</strong> February 2026</p>
+          <p><strong>Your Role:</strong> {{ auth_user.role|capitalize if auth_user else 'Unknown' }}</p>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>&copy; 2026 1-227 AB Flight Scheduler. All rights reserved.</p>
+        <p class="subtle">Army Training Program Management System | <a href="/help">Help & Documentation</a></p>
+      </div>
+    </footer>
+
+  </body>
+</html>

@@ -5,11 +5,7 @@ services:
     build:
       context: ./flt-scheduler-app
       dockerfile: Dockerfile
-      args:
-        VERSION: ${VERSION:-0.9.0-beta}
-        BUILD_DATE: ${BUILD_DATE:-2026-02-14}
-        VCS_REF: ${VCS_REF:-latest}
-    image: flt-scheduler:${VERSION:-0.9.0-beta}
+    image: flt-scheduler:local
     ports:
       - "8080:8080"
     environment:
@@ -19,9 +15,3 @@ services:
     volumes:
       - ./flt-scheduler-app/data:/app/data
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s

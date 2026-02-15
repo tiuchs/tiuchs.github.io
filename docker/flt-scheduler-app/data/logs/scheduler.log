@@ -1,0 +1,466 @@
+2026-02-14 17:54:42 [INFO] scheduler [app.py:1929] - Application starting up...
+2026-02-14 17:54:42 [INFO] scheduler [app.py:145] - Created backup: scheduler-backup-20260214-175442.db (0.05 MB)
+2026-02-14 17:54:42 [INFO] scheduler [app.py:1932] - Startup backup: Backup created: scheduler-backup-20260214-175442.db (0.05 MB)
+2026-02-14 17:54:42 [INFO] scheduler [app.py:212] - Daily backup scheduler started
+2026-02-14 18:00:19 [INFO] scheduler [app.py:2022] - Application starting up...
+2026-02-14 18:00:19 [INFO] scheduler [app.py:145] - Created backup: scheduler-backup-20260214-180019.db (0.05 MB)
+2026-02-14 18:00:19 [INFO] scheduler [app.py:2025] - Startup backup: Backup created: scheduler-backup-20260214-180019.db (0.05 MB)
+2026-02-14 18:00:19 [INFO] scheduler [app.py:212] - Daily backup scheduler started
+2026-02-14 18:05:47 [INFO] scheduler [app.py:2031] - Application starting up...
+2026-02-14 18:05:47 [INFO] scheduler [app.py:145] - Created backup: scheduler-backup-20260214-180547.db (0.05 MB)
+2026-02-14 18:05:47 [INFO] scheduler [app.py:2034] - Startup backup: Backup created: scheduler-backup-20260214-180547.db (0.05 MB)
+2026-02-14 18:05:47 [INFO] scheduler [app.py:212] - Daily backup scheduler started
+2026-02-14 18:07:48 [INFO] scheduler [app.py:315] - AUDIT: bulk_import_crew | crew:bulk | admin | Crew import complete: created=2, updated=0, skipped=0
+2026-02-14 18:07:58 [INFO] scheduler [app.py:315] - AUDIT: bulk_import_aircraft | aircraft:bulk | admin | Aircraft import complete: created=1, updated=0, skipped=0
+2026-02-14 18:08:07 [INFO] scheduler [app.py:315] - AUDIT: update_aircraft | aircraft:1 | admin | A CO  (1) -> A CO AH-64 (1)
+2026-02-14 18:08:35 [INFO] scheduler [app.py:315] - AUDIT: create_flight | flight:1 | admin | Mission 2026045-001 created for 2026-02-14 16:08
+2026-02-14 18:10:52 [INFO] scheduler [app.py:2032] - Application starting up...
+2026-02-14 18:10:52 [INFO] scheduler [app.py:145] - Created backup: scheduler-backup-20260214-181052.db (0.05 MB)
+2026-02-14 18:10:52 [INFO] scheduler [app.py:2035] - Startup backup: Backup created: scheduler-backup-20260214-181052.db (0.05 MB)
+2026-02-14 18:10:52 [INFO] scheduler [app.py:212] - Daily backup scheduler started
+2026-02-14 18:15:58 [INFO] scheduler [app.py:2032] - Application starting up...
+2026-02-14 18:15:58 [INFO] scheduler [app.py:145] - Created backup: scheduler-backup-20260214-181558.db (0.05 MB)
+2026-02-14 18:15:58 [INFO] scheduler [app.py:2035] - Startup backup: Backup created: scheduler-backup-20260214-181558.db (0.05 MB)
+2026-02-14 18:15:58 [INFO] scheduler [app.py:212] - Daily backup scheduler started
+2026-02-14 18:54:17 [INFO] scheduler [app.py:315] - AUDIT: update_flight_status | flight:1 | admin | 2026045-001 set to approved
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:07:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:07:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:07:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-210706.db (0.10 MB)
+2026-02-14 21:07:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:07:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:08:21 [INFO] scheduler [app.py:328] - AUDIT: update_flight | flight:1 | admin | Mission 2026045-001 updated; changed=True; status=planned
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:16:28 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:16:28 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:16:28 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:16:28 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-211628.db (0.10 MB)
+2026-02-14 21:16:28 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:30:46 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:30:46 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-213046.db (0.10 MB)
+2026-02-14 21:30:46 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-213046.db (0.10 MB)
+2026-02-14 21:30:46 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:30:46 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:30:46 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-213046.db (0.10 MB)
+2026-02-14 21:30:46 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-213046.db (0.10 MB)
+2026-02-14 21:30:46 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:43:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:43:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-214356.db (0.10 MB)
+2026-02-14 21:43:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-214356.db (0.10 MB)
+2026-02-14 21:43:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:43:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:43:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-214356.db (0.10 MB)
+2026-02-14 21:43:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-214356.db (0.10 MB)
+2026-02-14 21:43:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:52:10 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:52:10 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:52:10 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:52:10 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215210.db (0.10 MB)
+2026-02-14 21:52:10 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:54:39 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:54:39 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:54:39 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:54:39 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215439.db (0.10 MB)
+2026-02-14 21:54:39 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:56:44 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:56:44 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:56:44 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 21:56:44 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-215644.db (0.10 MB)
+2026-02-14 21:56:44 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:00:43 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:00:43 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:00:43 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:00:43 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-220043.db (0.10 MB)
+2026-02-14 22:00:43 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:08:53 [INFO] scheduler [app.py:328] - AUDIT: update_flight | flight:1 | admin | Mission 2026045-001 updated; changed=True; status=planned
+2026-02-14 22:10:22 [INFO] scheduler [app.py:328] - AUDIT: update_flight | flight:1 | admin | Mission 2026045-001 updated; changed=True; status=planned
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:14:14 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:14:14 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:14:14 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:14:14 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-221414.db (0.10 MB)
+2026-02-14 22:14:14 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:14:48 [INFO] scheduler [app.py:328] - AUDIT: update_flight_status | flight:1 | admin | 2026045-001 set to approved
+2026-02-14 22:14:50 [INFO] scheduler [app.py:328] - AUDIT: update_flight_status | flight:1 | admin | 2026045-001 set to cancelled
+2026-02-14 22:14:53 [INFO] scheduler [app.py:328] - AUDIT: update_flight_status | flight:1 | admin | 2026045-001 set to approved
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:24:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:24:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:24:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:24:56 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222456.db (0.10 MB)
+2026-02-14 22:24:56 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:27:42 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:27:42 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:27:42 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222742.db (0.10 MB)
+2026-02-14 22:27:42 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:27:43 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:27:43 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222743.db (0.10 MB)
+2026-02-14 22:27:43 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222743.db (0.10 MB)
+2026-02-14 22:27:43 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:28:47 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:28:47 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:28:47 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:28:47 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:28:47 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-222847.db (0.10 MB)
+2026-02-14 22:28:47 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:38:05 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:38:05 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:38:05 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:38:05 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-223805.db (0.10 MB)
+2026-02-14 22:38:05 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:47:17 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:47:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-224717.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-224717.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:47:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:47:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:47:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:47:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-224718.db (0.10 MB)
+2026-02-14 22:47:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:52:24 [INFO] scheduler [app.py:328] - AUDIT: create_flight | flight:2 | admin | Mission 2026045-002 created for 2026-02-14 07:45
+2026-02-14 22:53:43 [INFO] scheduler [app.py:328] - AUDIT: create_flight | flight:3 | admin | Mission 2026047-001 created for 2026-02-16 17:00
+2026-02-14 22:54:21 [INFO] scheduler [app.py:328] - AUDIT: update_flight_status | flight:3 | admin | 2026047-001 set to approved
+2026-02-14 22:54:33 [INFO] scheduler [app.py:328] - AUDIT: closeout_flight | flight:3 | admin | 2026047-001 closeout=1 actuals 19:54-23:54 (4.00h); reasons=; comments=
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:57:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:57:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:57:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:57:06 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225706.db (0.10 MB)
+2026-02-14 22:57:06 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:58:24 [INFO] scheduler [app.py:328] - AUDIT: closeout_flight | flight:1 | admin | 2026045-001 closeout=1 actuals 18:58-22:58 (4.00h); reasons=; comments=
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:58:51 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:58:51 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:58:51 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-14 22:58:51 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260214-225851.db (0.10 MB)
+2026-02-14 22:58:51 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:25:13 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:25:13 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:25:13 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:25:13 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-022513.db (0.10 MB)
+2026-02-15 02:25:13 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:34:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:34:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:34:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:34:18 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-023418.db (0.10 MB)
+2026-02-15 02:34:18 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:45:29 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:45:29 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-024529.db (0.10 MB)
+2026-02-15 02:45:29 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-024529.db (0.10 MB)
+2026-02-15 02:45:29 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:45:29 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:45:29 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-024529.db (0.10 MB)
+2026-02-15 02:45:29 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-024529.db (0.10 MB)
+2026-02-15 02:45:29 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:45:30 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:45:30 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-024530.db (0.10 MB)
+2026-02-15 02:45:30 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-024530.db (0.10 MB)
+2026-02-15 02:45:30 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:45:30 [INFO] scheduler [app.py:2186] - Application starting up...
+2026-02-15 02:45:30 [INFO] scheduler [app.py:158] - Created backup: scheduler-backup-20260215-024530.db (0.10 MB)
+2026-02-15 02:45:30 [INFO] scheduler [app.py:2189] - Startup backup: Backup created: scheduler-backup-20260215-024530.db (0.10 MB)
+2026-02-15 02:45:30 [INFO] scheduler [app.py:225] - Daily backup scheduler started
+2026-02-15 02:47:17 [INFO] scheduler [app.py:328] - AUDIT: bulk_import_aircraft | aircraft:bulk | admin | Aircraft import complete: created=12, updated=0, skipped=0
+2026-02-15 02:47:45 [INFO] scheduler [app.py:328] - AUDIT: bulk_import_crew | crew:bulk | admin | Crew import complete: created=20, updated=0, skipped=0
+2026-02-15 02:47:51 [WARNING] scheduler [app.py:1766] - Cannot delete crew member 'Tim' - referenced in 3 flight(s). Mark as inactive instead.
+2026-02-15 02:47:51 [INFO] scheduler [app.py:328] - AUDIT: delete_crew_failed | crew:1 | admin | Cannot delete 'Tim' - referenced in 3 flight(s)
+2026-02-15 02:47:55 [WARNING] scheduler [app.py:1766] - Cannot delete crew member 'Bill' - referenced in 3 flight(s). Mark as inactive instead.
+2026-02-15 02:47:55 [INFO] scheduler [app.py:328] - AUDIT: delete_crew_failed | crew:2 | admin | Cannot delete 'Bill' - referenced in 3 flight(s)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2199] - Application starting up...
+2026-02-15 03:15:33 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2202] - Startup backup: Backup created: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2199] - Application starting up...
+2026-02-15 03:15:33 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:15:33 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2202] - Startup backup: Backup created: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2199] - Application starting up...
+2026-02-15 03:15:33 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2202] - Startup backup: Backup created: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2199] - Application starting up...
+2026-02-15 03:15:33 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:2202] - Startup backup: Backup created: scheduler-backup-20260215-031533.db (0.10 MB)
+2026-02-15 03:15:33 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2210] - Application starting up...
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2210] - Application starting up...
+2026-02-15 03:47:42 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2213] - Startup backup: Backup created: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2213] - Startup backup: Backup created: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:47:42 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2210] - Application starting up...
+2026-02-15 03:47:42 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2213] - Startup backup: Backup created: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2210] - Application starting up...
+2026-02-15 03:47:42 [INFO] scheduler [app.py:166] - Created backup: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:2213] - Startup backup: Backup created: scheduler-backup-20260215-034742.db (0.10 MB)
+2026-02-15 03:47:42 [INFO] scheduler [app.py:233] - Daily backup scheduler started
+2026-02-15 03:48:25 [INFO] scheduler [app.py:346] - AUDIT: delete_flight | flight:1 | admin | Soft deleted mission 2026045-001
+2026-02-15 03:48:47 [INFO] scheduler [app.py:346] - AUDIT: closeout_flight | flight:2 | admin | 2026045-002 closeout=1 actuals 22:48-03:48 (5.00h); reasons=; comments=
+2026-02-15 03:50:09 [INFO] scheduler [app.py:346] - AUDIT: create_flight | flight:4 | admin | Mission 2026045-003 created for 2026-02-14 10:49
+2026-02-15 03:50:54 [INFO] scheduler [app.py:346] - AUDIT: update_flight_status | flight:2 | admin | 2026045-002 set to approved
+2026-02-15 03:50:58 [INFO] scheduler [app.py:346] - AUDIT: update_flight_status | flight:4 | admin | 2026045-003 set to approved
+2026-02-15 03:51:51 [INFO] scheduler [app.py:346] - AUDIT: closeout_flight | flight:4 | admin | 2026045-003 closeout=1 actuals 14:51-18:51 (4.00h); reasons=; comments=
+2026-02-15 03:52:02 [INFO] scheduler [app.py:346] - AUDIT: closeout_flight | flight:4 | admin | 2026045-003 closeout=1 actuals 14:51-18:34 (3.72h); reasons=; comments=
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:13:26 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:13:26 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:13:26 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:13:26 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-041326.db (0.10 MB)
+2026-02-15 04:13:26 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:15:33 [INFO] scheduler [app.py:348] - AUDIT: update_timezone | app_settings:timezone | admin | Timezone set to US/Central
+2026-02-15 04:17:31 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:18:01 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:18:31 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:19:01 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:19:32 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:20:32 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:21:32 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:22:02 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:22:32 [WARNING] scheduler [app.py:855] - Health check: database integrity check returned *** in database main ***
+Tree 11 page 11: unable to get the page. error code=522
+Tree 6 page 6: unable to get the page. error code=522
+Tree 24 page 24: unable to get the page. error code=522
+Tree 23 page 23: unable to get the page. error code=522
+Tree 21 page 21: unable to get the page. error code=522
+Tree 3 page 3: unable to get the page. error code=522
+2026-02-15 04:22:47 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:22:47 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:22:47 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-042247.db (0.10 MB)
+2026-02-15 04:22:47 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-042247.db (0.10 MB)
+2026-02-15 04:22:47 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-042247.db (0.10 MB)
+2026-02-15 04:22:47 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-042247.db (0.10 MB)
+2026-02-15 04:22:47 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:22:47 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:22:48 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:22:48 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-042248.db (0.10 MB)
+2026-02-15 04:22:48 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-042248.db (0.10 MB)
+2026-02-15 04:22:48 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:22:48 [INFO] scheduler [app.py:2233] - Application starting up...
+2026-02-15 04:22:48 [INFO] scheduler [app.py:168] - Created backup: scheduler-backup-20260215-042248.db (0.10 MB)
+2026-02-15 04:22:48 [INFO] scheduler [app.py:2236] - Startup backup: Backup created: scheduler-backup-20260215-042248.db (0.10 MB)
+2026-02-15 04:22:48 [INFO] scheduler [app.py:235] - Daily backup scheduler started
+2026-02-15 04:23:58 [INFO] scheduler [app.py:348] - AUDIT: update_timezone | app_settings:timezone | admin | Timezone set to US/Central

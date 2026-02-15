@@ -32,20 +32,9 @@
         </nav>
       </section>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <section class="flash-messages">
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-          </section>
-        {% endif %}
-      {% endwith %}
-
       <section class="card">
         <h2>Aircraft Management</h2>
         <form method="POST" action="/settings/aircraft" class="grid">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <label>Tail Number<input name="tail_number" placeholder="A123" required /></label>
           <label>Model<input name="model" placeholder="UH-60M" /></label>
           <label>
@@ -58,7 +47,6 @@
           <button type="submit">Add Aircraft</button>
         </form>
         <form method="POST" action="/settings/aircraft/import" enctype="multipart/form-data" class="grid">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <label class="full">
             Bulk Import Aircraft (CSV)
             <textarea
@@ -82,7 +70,6 @@
                 <th>Active</th>
                 <th>Edit</th>
                 <th>Set Active</th>
-                <th>Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -93,7 +80,6 @@
                 <td>{{ "Yes" if craft.active else "No" }}</td>
                 <td>
                   <form method="POST" action="/settings/aircraft/{{ craft.id }}/update" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input name="tail_number" value="{{ craft.tail_number }}" required />
                     <input name="model" value="{{ craft.model }}" placeholder="Model" />
                     <select name="active">
@@ -105,15 +91,8 @@
                 </td>
                 <td>
                   <form method="POST" action="/settings/aircraft/{{ craft.id }}/active" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" name="active" value="{{ 0 if craft.active else 1 }}" />
                     <button type="submit" class="secondary">{{ "Deactivate" if craft.active else "Activate" }}</button>
-                  </form>
-                </td>
-                <td>
-                  <form method="POST" action="/settings/aircraft/{{ craft.id }}/delete" class="inline" onsubmit="return confirm('Permanently delete {{ craft.tail_number }}? This cannot be undone if not used in any flights.');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="danger" style="background: #dc3545; border-color: #dc3545;">Delete</button>
                   </form>
                 </td>
               </tr>
@@ -123,28 +102,5 @@
         </div>
       </section>
     </main>
-
-    <footer class="site-footer">
-      <div class="footer-content">
-        <p>&copy; 2026 1-227 AB Flight Scheduler. All rights reserved.</p>
-        <p class="subtle">Army Training Program Management System | <a href="/help">Help & Documentation</a></p>
-      </div>
-    </footer>
-
-    <script>
-      // Auto-dismiss success alerts after 10 seconds
-      document.addEventListener('DOMContentLoaded', function() {
-        const successAlerts = document.querySelectorAll('.alert-success');
-        successAlerts.forEach(function(alert) {
-          setTimeout(function() {
-            alert.style.opacity = '0';
-            alert.style.transition = 'opacity 0.5s ease-out';
-            setTimeout(function() {
-              alert.remove();
-            }, 500);
-          }, 10000);
-        });
-      });
-    </script>
   </body>
 </html>
