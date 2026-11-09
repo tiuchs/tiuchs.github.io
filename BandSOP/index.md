@@ -3,10 +3,10 @@
 **Document:** Band_Road_Crew_SOP_v1.md  
 **Version:** 1.0 — Working draft  
 **Date:** November 8, 2026  
-**Organization:** [High School / Band Name]  
-**Approving authority:** Head Band Director  
+**Organization:** [Harker Heights High School/ Red Brigade Band]  
+**Approving authority:** Head Band Director - Eric Skinner 
 **Equipment authority:** Designated Assistant Band Director  
-**Document custodian:** [Name / Position]  
+**Document custodian:** [Tim Iuchs]  
 **Status:** For chapter-by-chapter review; approval pending
 
 > **Source and revision note:** This working copy was reconstructed from the requirements available in the referenced “Road Crew SOP Draft” conversation. The prior assistant responses were returned as content-reference placeholders, so their original chapter text and appendix register could not be recovered. This document is a complete proposed 12-chapter SOP and appendix register, not a verbatim transcription. It incorporates the requested three-director hierarchy, designated assistant director equipment accountability, and event-specific dietary assessment.
