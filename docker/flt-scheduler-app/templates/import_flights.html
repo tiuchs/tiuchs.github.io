@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mass Flight Import - 1-227 AB Flight Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card topbar">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='brand-logo.png') }}" alt="1-227 AB crest" class="brand-logo" />
+          <div>
+            <h1>Mass Flight Import</h1>
+            <p class="subtle">Upload CSV file to import multiple flights at once.</p>
+          </div>
+        </div>
+        <div class="user-tools">
+          <a class="button secondary" href="/help">Help</a>
+          <a class="button secondary" href="/settings/admin">Back to Settings</a>
+          <a class="button secondary" href="/">Dashboard</a>
+          <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="secondary">Sign Out</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <nav class="settings-menu">
+          <a href="/settings/admin">Admin Settings</a>
+          <a href="/settings/crew">Crew Management</a>
+          <a href="/settings/aircraft">Aircraft Management</a>
+          <a class="active" href="/settings/import-flights">Mass Flight Import</a>
+        </nav>
+      </section>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="flash-messages">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span class="alert-message">{{ message }}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+              </div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      <section class="card">
+        <h2>Upload CSV File</h2>
+        <p class="subtle">
+          Upload a CSV file with flight data. The system will automatically generate mission IDs and create any missing crew members or aircraft.
+        </p>
+
+        <form method="POST" action="/settings/import-flights" enctype="multipart/form-data" class="grid">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+          <label class="full">
+            CSV File
+            <input type="file" name="import_file" accept=".csv,text/csv" required />
+          </label>
+
+          <details class="full">
+            <summary style="cursor: pointer; font-weight: 600; margin-bottom: 0.5rem;">CSV Format Requirements (click to expand)</summary>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 4px; margin-top: 0.5rem;">
+              <p><strong>Required Headers (in this order):</strong></p>
+              <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                <li><code>flight_date</code> - Format: YYYY-MM-DD (e.g., 2026-02-25)</li>
+                <li><code>launch_time</code> - Format: HH:MM (e.g., 08:00)</li>
+                <li><code>recovery_time</code> - Format: HH:MM (e.g., 12:00)</li>
+                <li><code>mission_type</code> - Must be "training" or "mission"</li>
+                <li><code>mission_title</code> - Description of the mission</li>
+                <li><code>atp_company</code> - Must be "A Co", "B Co", or "C Co"</li>
+                <li><code>tail_number</code> - Aircraft tail number (e.g., UH-60-001)</li>
+                <li><code>aircraft_model</code> - Aircraft model (e.g., UH-60M) - optional if aircraft exists</li>
+                <li><code>origin</code> - Origin airfield code (e.g., KFTW)</li>
+                <li><code>route</code> - Route waypoints (optional)</li>
+                <li><code>destination</code> - Destination airfield code (e.g., KDFW)</li>
+                <li><code>pic_name</code> - Pilot in Command name</li>
+                <li><code>pic_is_amc</code> - 1 or 0 (1 = PIC is also AMC)</li>
+                <li><code>pilot_name</code> - Pilot name</li>
+                <li><code>crew_members</code> - Comma-separated crew names (optional)</li>
+                <li><code>non_rated_crew</code> - Non-rated crew members (optional)</li>
+                <li><code>is_team_flight</code> - 1 or 0 (1 = team flight)</li>
+                <li><code>amc_mission_id</code> - AMC mission ID if team flight (optional)</li>
+                <li><code>notes</code> - Additional notes (optional)</li>
+              </ol>
+
+              <p style="margin-top: 1rem;"><strong>Example CSV:</strong></p>
+              <pre style="background: var(--bg); padding: 0.75rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem;">flight_date,launch_time,recovery_time,mission_type,mission_title,atp_company,tail_number,aircraft_model,origin,route,destination,pic_name,pic_is_amc,pilot_name,crew_members,non_rated_crew,is_team_flight,amc_mission_id,notes
+2026-02-25,08:00,12:00,training,Night Ops Training,A Co,UH-60-001,UH-60M,KFTW,V198,KDFW,Smith,0,Johnson,"SSG Davis, SGT Lee",,0,,Practice NVG approaches
+2026-02-25,14:00,18:00,mission,Transport Mission,B Co,UH-60-002,UH-60M,KDFW,Direct,KAUS,Williams,1,Brown,,PVT Martinez,0,,VIP transport</pre>
+
+              <p style="margin-top: 1rem; color: var(--accent);"><strong>Notes:</strong></p>
+              <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>Mission IDs will be auto-generated based on flight date</li>
+                <li>Crew members not in the system will be automatically added</li>
+                <li>Aircraft not in the system will be automatically added</li>
+                <li>All imported flights start with "planned" status</li>
+              </ul>
+            </div>
+          </details>
+
+          <button type="submit" class="full">Upload and Process</button>
+        </form>
+      </section>
+
+      {% if results %}
+      <section class="card">
+        <h2>Import Results</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 4px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--success);">{{ success_count }}</div>
+            <div style="color: var(--text-subtle); font-size: 0.9rem;">Successful</div>
+          </div>
+          <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 4px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700; color: var(--error);">{{ error_count }}</div>
+            <div style="color: var(--text-subtle); font-size: 0.9rem;">Failed</div>
+          </div>
+          <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 4px; text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700;">{{ total_count }}</div>
+            <div style="color: var(--text-subtle); font-size: 0.9rem;">Total Rows</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Status</th>
+                <th>Mission ID</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Mission</th>
+                <th>Tail</th>
+                <th>PIC</th>
+                <th>Pilot</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in results %}
+              <tr>
+                <td>{{ result.row_number }}</td>
+                <td>
+                  {% if result.status == 'success' %}
+                  <span class="chip approved">Success</span>
+                  {% else %}
+                  <span class="chip cancelled">Error</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if result.mission_id %}
+                  <code>{{ result.mission_id }}</code>
+                  {% else %}
+                  <span class="subtle">-</span>
+                  {% endif %}
+                </td>
+                <td>{{ result.data.flight_date if result.data else '-' }}</td>
+                <td>
+                  {% if result.data and result.data.launch_time %}
+                  {{ result.data.launch_time }}-{{ result.data.recovery_time }}
+                  {% else %}
+                  <span class="subtle">-</span>
+                  {% endif %}
+                </td>
+                <td>{{ result.data.mission_title if result.data else '-' }}</td>
+                <td>{{ result.data.tail_number if result.data else '-' }}</td>
+                <td>{{ result.data.pic_name if result.data else '-' }}</td>
+                <td>{{ result.data.pilot_name if result.data else '-' }}</td>
+                <td>
+                  {% if result.errors %}
+                  <div style="color: var(--error); font-size: 0.9rem;">
+                    <strong>Errors:</strong>
+                    <ul style="margin: 0.25rem 0 0 1rem; padding: 0;">
+                      {% for error in result.errors %}
+                      <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  {% endif %}
+                  {% if result.warnings %}
+                  <div style="color: var(--warning); font-size: 0.9rem; margin-top: 0.5rem;">
+                    <strong>Warnings:</strong>
+                    <ul style="margin: 0.25rem 0 0 1rem; padding: 0;">
+                      {% for warning in result.warnings %}
+                      <li>{{ warning }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <a href="/" class="button">Go to Dashboard</a>
+          <a href="/settings/import-flights" class="button secondary">Import More Flights</a>
+        </div>
+      </section>
+      {% endif %}
+
+    </main>
+
+    <footer class="app-footer">
+      <p class="version-info">1-227 AB Flight Scheduler <span class="version-tag">v{{ app_version }}</span></p>
+    </footer>
+  </body>
+</html>

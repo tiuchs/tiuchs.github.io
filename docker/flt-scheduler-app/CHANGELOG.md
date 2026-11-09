@@ -15,6 +15,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for approvals
 - Mobile app support
 
+## [0.10.2-beta] - 2026-02-22
+
+### Fixed
+- Daily Consolidated Missions table column alignment
+  - Added missing Non-rated Crew data column
+  - Corrected Team flight boolean column position
+  - Fixed AMC Mission ID column alignment
+  - All table columns now properly align with their headers
+
+## [0.10.1-beta] - 2026-02-22
+
+### Changed
+- Improved Add Flight form layout with logical grouping
+  - Group 1: Flight Date & Time (date, launch, recovery)
+  - Group 2: Mission Details (type, mission title, ATP company)
+  - Group 3: Aircraft & Route (tail number, origin, route, destination)
+  - Group 4: Crew & Additional Information (PIC, pilot, crew members, notes)
+  - Added visual section headers with accent colors and border separators
+  - Enhanced form readability and user experience
+
+## [0.10.0-beta] - 2026-02-22
+
+### Added
+- PostgreSQL support alongside SQLite
+  - New environment variables: DATABASE_TYPE, DATABASE_URL, SQLITE_DB_PATH
+  - Automatic database abstraction layer
+  - Connection pooling for PostgreSQL (ThreadedConnectionPool)
+  - Migration script for SQLite to PostgreSQL data transfer
+- Audit log archiving system
+  - Automatic archiving of logs older than 90 days
+  - Archive table (audit_logs_archive) for historical data
+  - Integrated with daily backup task
+  - Maintains query performance at scale
+- Configurable database path
+  - SQLITE_DB_PATH environment variable (required in production)
+  - Development default for local testing
+  - Flexible deployment options
+
+### Changed
+- Increased Gunicorn workers from 4 to 8 for better concurrency
+- SQLite connections use check_same_thread=False for multi-worker safety
+- Database path now configurable via environment variable
+
+### Performance
+- 2x worker increase improves request throughput
+- Audit log archiving maintains query performance over time
+- Connection pooling for PostgreSQL deployments
+- Optimized for 10-50 concurrent users
+
+### Infrastructure
+- PostgreSQL migration path for high-scale deployments
+- Backward compatible with existing SQLite deployments
+- Health checks support both database types
+
+### Migration Notes
+- **BREAKING:** SQLITE_DB_PATH environment variable is now required in production
+  - Development: defaults to `data/scheduler.db` with warning
+  - Production: must explicitly set SQLITE_DB_PATH (e.g., `/app/data/scheduler.db`)
+- For PostgreSQL migration, use migrate_to_postgresql.py script
+- Existing SQLite deployments: add `SQLITE_DB_PATH=/app/data/scheduler.db` to environment
+
+### Dependencies
+- Added psycopg2-binary==2.9.9 for PostgreSQL support
+
+## [0.9.2-beta] - 2026-02-15
+
+### Added
+- Backup management feature
+  - Delete backups from Settings page
+  - Confirmation dialog with warning to prevent accidents
+  - Safety measure: Cannot delete most recent backup
+  - Audit logging for backup deletions
+  - Delete button disabled for most recent backup with explanatory tooltip
+
+### Security
+- Backup deletion restricted to admin users only
+- Validation to ensure only scheduler backup files can be deleted
+- Protection against deleting the most recent backup
+
 ## [0.9.1-beta] - 2026-02-15
 
 ### Added

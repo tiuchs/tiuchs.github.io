@@ -55,6 +55,14 @@ spec:
               value: "admin"
             - name: DEFAULT_ADMIN_PASSWORD
               value: "admin123"
+            # Database configuration
+            - name: DATABASE_TYPE
+              value: "sqlite"  # or "postgresql"
+            - name: SQLITE_DB_PATH
+              value: "/app/data/scheduler.db"  # REQUIRED for SQLite
+            # Uncomment for PostgreSQL:
+            # - name: DATABASE_URL
+            #   value: "postgresql://user:pass@postgres-service:5432/flight_scheduler"
           volumeMounts:
             - name: app-data
               mountPath: /app/data

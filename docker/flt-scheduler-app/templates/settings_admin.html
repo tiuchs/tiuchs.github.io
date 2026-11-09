@@ -20,6 +20,7 @@
           <a class="button secondary" href="/help">Help</a>
           <a class="button secondary" href="/">Back to Dashboard</a>
           <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="secondary">Sign Out</button>
           </form>
         </div>
@@ -30,6 +31,7 @@
           <a class="active" href="/settings/admin">Admin Settings</a>
           <a href="/settings/crew">Crew Management</a>
           <a href="/settings/aircraft">Aircraft Management</a>
+          <a href="/settings/import-flights">Mass Flight Import</a>
         </nav>
       </section>
 
@@ -165,6 +167,7 @@
         <h2>Database Backups</h2>
         <p class="subtle">Backups are created daily automatically. Manual backups retain for 7 days.</p>
         <form method="POST" action="/settings/backup/create" class="inline" style="margin-bottom: 1rem;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <button type="submit">Create Backup Now</button>
         </form>
         <div id="backup-list">
@@ -189,8 +192,9 @@
 
       <section class="card">
         <h2>Recent Audit Log</h2>
+        <p class="subtle">Showing last 100 audit events (scroll to see more)</p>
         {% if audit_logs %}
-        <div class="table-wrap">
+        <div class="audit-log-scroll">
           <table>
             <thead>
               <tr>
@@ -241,16 +245,25 @@
           }
 
           let html = '<div class="table-wrap"><table><thead><tr>';
-          html += '<th>Backup File</th><th>Size</th><th>Created (UTC)</th><th>Age</th><th>Download</th>';
+          html += '<th>Backup File</th><th>Size</th><th>Created (UTC)</th><th>Age</th><th>Actions</th>';
           html += '</tr></thead><tbody>';
 
-          backups.forEach(backup => {
+          backups.forEach((backup, index) => {
             html += '<tr>';
             html += `<td><code>${backup.filename}</code></td>`;
             html += `<td>${backup.size_mb} MB</td>`;
             html += `<td>${backup.created}</td>`;
             html += `<td>${backup.age_days} days</td>`;
-            html += `<td><a href="/settings/backup/download/${backup.filename}" class="button secondary">Download</a></td>`;
+            html += '<td>';
+            html += `<a href="/settings/backup/download/${backup.filename}" class="button secondary" style="margin-right: 0.5rem;">Download</a>`;
+
+            // Don't allow deletion of the most recent backup
+            if (index === 0) {
+              html += `<button type="button" class="danger" disabled title="Cannot delete most recent backup">Delete</button>`;
+            } else {
+              html += `<button type="button" class="danger" onclick="deleteBackup('${backup.filename}')">Delete</button>`;
+            }
+            html += '</td>';
             html += '</tr>';
           });
 
@@ -264,6 +277,88 @@
 
       // Load backups when page loads
       document.addEventListener('DOMContentLoaded', loadBackups);
+
+      // Delete backup with confirmation
+      let confirmCallback = null;
+
+      async function deleteBackup(filename) {
+        showConfirmation(
+          'Delete Backup',
+          `Are you sure you want to delete "${filename}"? This action cannot be undone.`,
+          async () => {
+            try {
+              const response = await fetch(`/settings/backup/delete/${filename}`, {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                }
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                // Reload the backup list
+                await loadBackups();
+              } else {
+                alert('Error deleting backup: ' + (result.error || 'Unknown error'));
+              }
+            } catch (error) {
+              alert('Error deleting backup: ' + error.message);
+            }
+          }
+        );
+      }
+
+      function showConfirmation(title, message, callback) {
+        const modal = document.getElementById('confirmModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const confirmBtn = document.getElementById('modalConfirm');
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modal.classList.add('active');
+
+        confirmCallback = callback;
+
+        // Focus on confirm button
+        setTimeout(() => confirmBtn.focus(), 100);
+      }
+
+      function closeModal() {
+        const modal = document.getElementById('confirmModal');
+        modal.classList.remove('active');
+        confirmCallback = null;
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const confirmBtn = document.getElementById('modalConfirm');
+        if (confirmBtn) {
+          confirmBtn.addEventListener('click', () => {
+            if (confirmCallback) {
+              confirmCallback();
+            }
+            closeModal();
+          });
+        }
+
+        // Close modal on overlay click
+        const modal = document.getElementById('confirmModal');
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeModal();
+          }
+        });
+      });
 
       // Auto-dismiss success alerts after 10 seconds
       document.addEventListener('DOMContentLoaded', function() {
@@ -279,5 +374,21 @@
         });
       });
     </script>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalTitle">Confirm Action</h3>
+        </div>
+        <div class="modal-body">
+          <p id="modalMessage">Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="secondary" onclick="closeModal()">Cancel</button>
+          <button type="button" class="danger" id="modalConfirm">Confirm</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

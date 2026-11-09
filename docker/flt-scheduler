@@ -6,16 +6,18 @@ services:
       context: ./flt-scheduler-app
       dockerfile: Dockerfile
       args:
-        VERSION: ${VERSION:-0.9.0-beta}
-        BUILD_DATE: ${BUILD_DATE:-2026-02-14}
+        VERSION: ${VERSION:-0.10.2-beta}
+        BUILD_DATE: ${BUILD_DATE:-2026-02-22}
         VCS_REF: ${VCS_REF:-latest}
-    image: flt-scheduler:${VERSION:-0.9.0-beta}
+    image: flt-scheduler:${VERSION:-0.10.2-beta}
     ports:
       - "8080:8080"
     environment:
       SECRET_KEY: ${SECRET_KEY:-dev-change-me}
       DEFAULT_ADMIN_USER: ${DEFAULT_ADMIN_USER:-admin}
       DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-admin123}
+      DATABASE_TYPE: ${DATABASE_TYPE:-sqlite}
+      SQLITE_DB_PATH: ${SQLITE_DB_PATH:-/app/data/scheduler.db}
     volumes:
       - ./flt-scheduler-app/data:/app/data
     restart: unless-stopped

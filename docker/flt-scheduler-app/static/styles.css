@@ -42,7 +42,7 @@ code {
 
 .layout {
   width: min(100%, var(--layout-max));
-  margin: 0 auto;
+  margin: 0;
   padding: 0.85rem 1.5rem;
   display: grid;
   gap: 0.65rem;
@@ -189,6 +189,20 @@ button.danger {
   gap: 0.4rem;
 }
 
+.form-section-header {
+  grid-column: 1 / -1;
+  margin: 1rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--line);
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.form-section-header:first-of-type {
+  margin-top: 0;
+}
+
 .full {
   grid-column: 1 / -1;
 }
@@ -249,6 +263,32 @@ button.danger {
   .table-wrap::after {
     opacity: 1;
   }
+}
+
+/* Scrollable audit log container */
+.audit-log-scroll {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  position: relative;
+}
+
+.audit-log-scroll table {
+  margin: 0;
+}
+
+.audit-log-scroll thead {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.audit-log-scroll thead th {
+  border-bottom: 2px solid var(--line);
 }
 
 table {

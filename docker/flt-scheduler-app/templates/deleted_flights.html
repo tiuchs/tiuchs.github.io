@@ -20,6 +20,7 @@
           <a class="button secondary" href="/settings/admin">Back to Settings</a>
           <a class="button secondary" href="/">Dashboard</a>
           <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="secondary">Sign Out</button>
           </form>
         </div>

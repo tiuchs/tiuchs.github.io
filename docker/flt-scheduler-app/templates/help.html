@@ -107,6 +107,7 @@
         <div class="user-tools">
           <a class="button secondary" href="/">Back to Dashboard</a>
           <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="secondary">Sign Out</button>
           </form>
         </div>

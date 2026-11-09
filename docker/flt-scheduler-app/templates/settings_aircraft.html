@@ -19,6 +19,7 @@
         <div class="user-tools">
           <a class="button secondary" href="/">Back to Dashboard</a>
           <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="secondary">Sign Out</button>
           </form>
         </div>
@@ -29,6 +30,7 @@
           <a href="/settings/admin">Admin Settings</a>
           <a href="/settings/crew">Crew Management</a>
           <a class="active" href="/settings/aircraft">Aircraft Management</a>
+          <a href="/settings/import-flights">Mass Flight Import</a>
         </nav>
       </section>
 

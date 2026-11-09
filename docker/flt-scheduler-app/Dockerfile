@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Build arguments for version tracking
-ARG VERSION=0.9.0-beta
+ARG VERSION=0.10.2-beta
 ARG BUILD_DATE
 ARG VCS_REF
 
@@ -26,5 +26,9 @@ COPY . .
 
 EXPOSE 8080
 
-# Use Gunicorn production server with 4 workers
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "app:app"]
+# Use Gunicorn production server with 8 workers.
+# --preload: import app.py once in the master before forking, so the
+# module-level init_db()/create_backup()/start_backup_scheduler() calls run
+# once instead of once per worker (concurrent workers racing on the same
+# SQLite file during startup backup was the cause of prior DB corruption).
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "8", "--timeout", "120", "--preload", "app:app"]

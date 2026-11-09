@@ -1,0 +1,6 @@
+flight_date,launch_time,recovery_time,mission_type,mission_title,atp_company,tail_number,aircraft_model,origin,route,destination,pic_name,pic_is_amc,pilot_name,crew_members,non_rated_crew,is_team_flight,amc_mission_id,notes
+2026-02-25,08:00,12:00,training,Night Ops Training,A Co,UH-60-001,UH-60M,KFTW,V198,KDFW,Smith,0,Johnson,"SSG Davis, SGT Lee",,0,,Practice NVG approaches
+2026-02-25,14:00,18:00,mission,Transport Mission,B Co,UH-60-002,UH-60M,KDFW,Direct,KAUS,Williams,1,Brown,,PVT Martinez,0,,VIP transport
+2026-02-26,06:00,10:00,training,Formation Flight Training,A Co,UH-60-003,UH-60M,KFTW,V16,KCLL,Anderson,0,Martinez,"SGT Wilson, CPL Thomas",,0,,Formation practice with 3-ship
+2026-02-26,13:00,17:00,mission,Medical Evacuation Training,C Co,UH-60-004,UH-60M,KAUS,Direct,KDFW,Thompson,1,Rodriguez,"SSG Parker, SPC Lee",PV2 Garcia,0,,MEDEVAC certification flight
+2026-02-27,09:00,11:30,training,Instrument Training,B Co,UH-60-001,UH-60M,KDFW,V198,KFTW,Johnson,0,Smith,,,0,,IFR approaches and holds

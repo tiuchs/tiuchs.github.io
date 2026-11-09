@@ -65,6 +65,7 @@ logger = setup_logging()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-change-me")
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file upload
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # Token valid for entire session, not just 1 hour
 
 # Enable CSRF protection
 csrf = CSRFProtect(app)
@@ -77,10 +78,29 @@ try:
 except FileNotFoundError:
     APP_VERSION = "0.9.0-beta"
 
+# Database configuration
 DATA_DIR = "data"
-DB_PATH = os.path.join(DATA_DIR, "scheduler.db")
+DATABASE_TYPE = os.environ.get("DATABASE_TYPE", "sqlite").lower()
+
+# SQLite configuration
+SQLITE_DB_PATH = os.environ.get("SQLITE_DB_PATH")
+if DATABASE_TYPE == "sqlite":
+    if not SQLITE_DB_PATH:
+        if os.environ.get("FLASK_ENV") == "development":
+            SQLITE_DB_PATH = os.path.join(DATA_DIR, "scheduler.db")
+            logger.warning("Using default SQLite path for development. Set SQLITE_DB_PATH in production!")
+        else:
+            raise RuntimeError("SQLITE_DB_PATH environment variable is required in production")
+    DB_PATH = SQLITE_DB_PATH
+
+# PostgreSQL configuration
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_TYPE == "postgresql" and not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required when DATABASE_TYPE=postgresql")
+
 BACKUP_DIR = os.path.join(DATA_DIR, "backups")
 DATE_FMT = "%Y-%m-%d"
+TIME_FMT = "%H:%M"
 DATETIME_FMT = "%Y-%m-%d %H:%M"
 BACKUP_RETENTION_DAYS = 7
 ROLES = {"user", "scheduler", "approver", "admin"}
@@ -96,14 +116,70 @@ SKYVECTOR_LL = "31.144812341768187,-97.717529291779"
 SKYVECTOR_CHART = "301"
 SKYVECTOR_ZOOM = "2"
 
+# PostgreSQL connection pool (initialized on first use)
+_pg_pool = None
+
 
 def db_conn():
-    conn = sqlite3.connect(DB_PATH, timeout=5.0)
-    conn.row_factory = sqlite3.Row
-    # Apply per-connection PRAGMA settings for stability
-    conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA busy_timeout=5000")
-    return conn
+    """Create database connection (SQLite or PostgreSQL based on config)."""
+    if DATABASE_TYPE == "sqlite":
+        conn = sqlite3.connect(DB_PATH, timeout=5.0, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        # Apply per-connection PRAGMA settings for stability
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("PRAGMA busy_timeout=5000")
+        return conn
+
+    elif DATABASE_TYPE == "postgresql":
+        import psycopg2
+        import psycopg2.extras
+        from psycopg2 import pool
+
+        # Initialize connection pool on first use
+        global _pg_pool
+        if _pg_pool is None:
+            _pg_pool = pool.ThreadedConnectionPool(
+                minconn=2,
+                maxconn=20,  # 8 workers * 2-3 connections each
+                dsn=DATABASE_URL
+            )
+            logger.info("PostgreSQL connection pool initialized (min=2, max=20)")
+
+        # Get connection from pool and wrap with RealDictCursor factory
+        conn = _pg_pool.getconn()
+
+        # Create a wrapper class to handle pool return on context exit
+        class PooledConnection:
+            def __init__(self, connection, pool):
+                self.conn = connection
+                self.pool = pool
+                # Set cursor factory for dict-like row access
+                self.conn.cursor_factory = psycopg2.extras.RealDictCursor
+
+            def __enter__(self):
+                return self.conn
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                if exc_type is None:
+                    self.conn.commit()
+                else:
+                    self.conn.rollback()
+                self.pool.putconn(self.conn)
+                return False
+
+            def execute(self, *args, **kwargs):
+                # Allow direct execute calls
+                cursor = self.conn.cursor()
+                cursor.execute(*args, **kwargs)
+                return cursor
+
+            def cursor(self):
+                return self.conn.cursor()
+
+        return PooledConnection(conn, _pg_pool)
+
+    else:
+        raise ValueError(f"Unsupported DATABASE_TYPE: {DATABASE_TYPE}")
 
 
 def quarantine_corrupt_db(reason: str):
@@ -132,7 +208,10 @@ def ensure_db_healthy():
 
 
 def create_backup() -> tuple[bool, str]:
-    """Create a timestamped backup of the database. Returns (success, message)."""
+    """Create a timestamped backup of the database (SQLite only). Returns (success, message)."""
+    if DATABASE_TYPE != "sqlite":
+        return False, "Backups only supported for SQLite (use PostgreSQL native tools like pg_dump)"
+
     if not os.path.exists(DB_PATH):
         return False, "Database does not exist"
 
@@ -208,6 +287,37 @@ def rotate_old_backups():
         logger.error(f"Backup rotation failed: {exc}", exc_info=True)
 
 
+def archive_old_audit_logs():
+    """Archive audit logs older than 90 days to keep query performance high."""
+    try:
+        with db_conn() as conn:
+            cutoff = (datetime.utcnow() - timedelta(days=90)).strftime(DATETIME_FMT)
+
+            count_result = conn.execute(
+                "SELECT COUNT(*) as count FROM audit_logs WHERE created_at < ?",
+                (cutoff,)
+            ).fetchone()
+            count = count_result["count"] if count_result else 0
+
+            if count == 0:
+                logger.debug("No audit logs to archive")
+                return
+
+            # Move to archive table
+            conn.execute("""
+                INSERT INTO audit_logs_archive (id, action, entity_type, entity_id, actor_username, details, created_at)
+                SELECT id, action, entity_type, entity_id, actor_username, details, created_at
+                FROM audit_logs WHERE created_at < ?
+            """, (cutoff,))
+
+            conn.execute("DELETE FROM audit_logs WHERE created_at < ?", (cutoff,))
+
+            logger.info(f"Archived {count} audit logs older than 90 days")
+
+    except Exception as exc:
+        logger.error(f"Audit log archiving failed: {exc}", exc_info=True)
+
+
 def daily_backup_task():
     """Background task that runs daily backups."""
     while True:
@@ -220,6 +330,7 @@ def daily_backup_task():
 
             if success:
                 rotate_old_backups()
+                archive_old_audit_logs()
                 logger.info(f"Daily backup completed: {message}")
             else:
                 logger.warning(f"Daily backup failed: {message}")
@@ -483,12 +594,13 @@ def init_db():
     ensure_db_healthy()
     os.makedirs(DATA_DIR, exist_ok=True)
     with db_conn() as conn:
-        # Configure SQLite for stability and performance
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-        conn.execute("PRAGMA foreign_keys=ON")
-        conn.execute("PRAGMA cache_size=-64000")
+        # SQLite-specific configuration
+        if DATABASE_TYPE == "sqlite":
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.execute("PRAGMA busy_timeout=5000")
+            conn.execute("PRAGMA foreign_keys=ON")
+            conn.execute("PRAGMA cache_size=-64000")
 
         conn.execute(
             """
@@ -555,6 +667,20 @@ def init_db():
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS audit_logs_archive (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                actor_username TEXT NOT NULL,
+                details TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                archived_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS crew (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
@@ -594,6 +720,8 @@ def init_db():
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action)")
+
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_archive_created ON audit_logs_archive(created_at)")
 
         conn.execute("CREATE INDEX IF NOT EXISTS idx_crew_active ON crew(active)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_aircraft_active ON aircraft(active)")
@@ -1247,6 +1375,13 @@ def create_flight():
                 ),
             )
             flight_id = cursor.lastrowid
+            write_audit(
+                "create_flight",
+                "flight",
+                str(flight_id),
+                f"Mission {mission_id} created for {payload['flight_date']} {payload['launch_time']}",
+                conn=conn
+            )
     except sqlite3.DatabaseError as exc:
         logger.error(f"Flight insert failed, attempting database recovery: {exc}", exc_info=True)
         ensure_db_healthy()
@@ -1254,12 +1389,6 @@ def create_flight():
         flash("Database error occurred. Please try again or contact an administrator.", "error")
         return redirect(url_for("index", date=payload["flight_date"]))
 
-    write_audit(
-        "create_flight",
-        "flight",
-        str(flight_id),
-        f"Mission {mission_id} created for {payload['flight_date']} {payload['launch_time']}",
-    )
     flash(f"Mission {mission_id} created successfully for {payload['flight_date']}.", "success")
     return redirect(url_for("index", date=payload["flight_date"]))
 
@@ -1305,23 +1434,25 @@ def closeout_flight(flight_id: int):
                 flight_id,
             ),
         )
+        if row:
+            hours = calculate_decimal_hours(actual_takeoff, actual_arrival)
+            reasons = ", ".join(
+                part
+                for part in [
+                    "Weather" if cancel_weather else "",
+                    "Maintenance" if cancel_maintenance else "",
+                    f"Other ({cancel_other_text})" if cancel_other and cancel_other_text else ("Other" if cancel_other else ""),
+                ]
+                if part
+            )
+            write_audit(
+                "closeout_flight",
+                "flight",
+                str(flight_id),
+                f"{row['mission_id']} closeout={closed_out} actuals {actual_takeoff}-{actual_arrival} ({hours}h); reasons={reasons}; comments={closeout_comments[:120]}",
+                conn=conn
+            )
     if row:
-        hours = calculate_decimal_hours(actual_takeoff, actual_arrival)
-        reasons = ", ".join(
-            part
-            for part in [
-                "Weather" if cancel_weather else "",
-                "Maintenance" if cancel_maintenance else "",
-                f"Other ({cancel_other_text})" if cancel_other and cancel_other_text else ("Other" if cancel_other else ""),
-            ]
-            if part
-        )
-        write_audit(
-            "closeout_flight",
-            "flight",
-            str(flight_id),
-            f"{row['mission_id']} closeout={closed_out} actuals {actual_takeoff}-{actual_arrival} ({hours}h); reasons={reasons}; comments={closeout_comments[:120]}",
-        )
         if closed_out:
             flash(f"Mission {row['mission_id']} closed out successfully ({hours} flight hours).", "success")
         else:
@@ -1344,11 +1475,75 @@ def set_status(flight_id: int):
             (flight_id,),
         ).fetchone()
         conn.execute("UPDATE flights SET status = ? WHERE id = ?", (status, flight_id))
+        if row:
+            write_audit("update_flight_status", "flight", str(flight_id), f"{row['mission_id']} set to {status}", conn=conn)
     if row:
-        write_audit("update_flight_status", "flight", str(flight_id), f"{row['mission_id']} set to {status}")
         flash(f"Mission {row['mission_id']} status changed to '{status}'.", "success")
     else:
         flash("Mission not found.", "error")
+    return redirect(url_for("index", date=focus_date))
+
+
+@app.post("/flights/bulk-approve")
+@login_required
+@role_required("approver", "admin")
+def bulk_approve_flights():
+    """Approve multiple flights at once (approvers and admins)."""
+    focus_date = request.form.get("focus_date", date.today().strftime(DATE_FMT))
+    flight_ids = request.form.getlist("flight_ids")
+
+    if not flight_ids:
+        flash("No flights selected for approval.", "error")
+        return redirect(url_for("index", date=focus_date))
+
+    approved_count = 0
+    skipped_count = 0
+    mission_ids = []
+
+    with db_conn() as conn:
+        for flight_id in flight_ids:
+            try:
+                # Get flight info and verify it's in planned status
+                row = conn.execute(
+                    "SELECT mission_id, status FROM flights WHERE id = ? AND deleted = 0",
+                    (flight_id,)
+                ).fetchone()
+
+                if not row:
+                    skipped_count += 1
+                    continue
+
+                if row["status"] != "planned":
+                    skipped_count += 1
+                    logger.warning(f"Skipped flight {row['mission_id']} - status is {row['status']}, not 'planned'")
+                    continue
+
+                # Approve the flight
+                conn.execute("UPDATE flights SET status = 'approved' WHERE id = ?", (flight_id,))
+                mission_ids.append(row["mission_id"])
+                write_audit(
+                    "bulk_approve_flight",
+                    "flight",
+                    str(flight_id),
+                    f"{row['mission_id']} approved via bulk action",
+                    conn=conn
+                )
+                approved_count += 1
+
+            except Exception as e:
+                logger.error(f"Error approving flight {flight_id}: {e}")
+                skipped_count += 1
+
+    # Build flash message
+    if approved_count > 0:
+        missions_str = ", ".join(mission_ids[:5])  # Show first 5
+        if len(mission_ids) > 5:
+            missions_str += f" and {len(mission_ids) - 5} more"
+        flash(f"Approved {approved_count} flight{'s' if approved_count > 1 else ''}: {missions_str}", "success")
+
+    if skipped_count > 0:
+        flash(f"Skipped {skipped_count} flight{'s' if skipped_count > 1 else ''} (already approved or not found)", "warning")
+
     return redirect(url_for("index", date=focus_date))
 
 
@@ -1552,7 +1747,7 @@ def settings_create_user():
                 (username, generate_password_hash(password), role, active),
             )
             user_id = cursor.lastrowid
-        write_audit("create_user", "user", str(user_id), f"Created {username} as {role} (active={active})")
+            write_audit("create_user", "user", str(user_id), f"Created {username} as {role} (active={active})", conn=conn)
         flash(f"User '{username}' created successfully with role '{role}'.", "success")
     except sqlite3.IntegrityError:
         write_audit("create_user_failed", "user", username, "Username already exists")
@@ -1578,8 +1773,9 @@ def settings_update_user_role(user_id: int):
     with db_conn() as conn:
         target = conn.execute("SELECT username, role FROM users WHERE id = ?", (user_id,)).fetchone()
         conn.execute("UPDATE users SET role = ? WHERE id = ?", (role, user_id))
+        if target:
+            write_audit("update_user_role", "user", str(user_id), f"{target['username']} role {target['role']} -> {role}", conn=conn)
     if target:
-        write_audit("update_user_role", "user", str(user_id), f"{target['username']} role {target['role']} -> {role}")
         flash(f"User '{target['username']}' role updated to '{role}'.", "success")
     else:
         flash("User not found.", "error")
@@ -1599,13 +1795,15 @@ def settings_update_user_active(user_id: int):
     with db_conn() as conn:
         target = conn.execute("SELECT username, active FROM users WHERE id = ?", (user_id,)).fetchone()
         conn.execute("UPDATE users SET active = ? WHERE id = ?", (active, user_id))
+        if target:
+            write_audit(
+                "update_user_active",
+                "user",
+                str(user_id),
+                f"{target['username']} active {target['active']} -> {active}",
+                conn=conn
+            )
     if target:
-        write_audit(
-            "update_user_active",
-            "user",
-            str(user_id),
-            f"{target['username']} active {target['active']} -> {active}",
-        )
         status_text = "activated" if active else "deactivated"
         flash(f"User '{target['username']}' {status_text} successfully.", "success")
     else:
@@ -1634,8 +1832,9 @@ def settings_update_user_password(user_id: int):
             "UPDATE users SET password_hash = ? WHERE id = ?",
             (generate_password_hash(new_password), user_id),
         )
+        if target:
+            write_audit("update_user_password", "user", str(user_id), f"Password reset for {target['username']}", conn=conn)
     if target:
-        write_audit("update_user_password", "user", str(user_id), f"Password reset for {target['username']}")
         flash(f"Password updated successfully for user '{target['username']}'.", "success")
     else:
         flash("User not found.", "error")
@@ -1659,7 +1858,7 @@ def settings_create_crew():
                 (name, active),
             )
             crew_id = cursor.lastrowid
-        write_audit("create_crew", "crew", str(crew_id), f"Created crew {name} (active={active})")
+            write_audit("create_crew", "crew", str(crew_id), f"Created crew {name} (active={active})", conn=conn)
         invalidate_cache("crew")
         flash(f"Crew member '{name}' added successfully.", "success")
     except sqlite3.IntegrityError:
@@ -1724,8 +1923,9 @@ def settings_update_crew_active(crew_id: int):
     with db_conn() as conn:
         target = conn.execute("SELECT name, active FROM crew WHERE id = ?", (crew_id,)).fetchone()
         conn.execute("UPDATE crew SET active = ? WHERE id = ?", (active, crew_id))
+        if target:
+            write_audit("update_crew_active", "crew", str(crew_id), f"{target['name']} active {target['active']} -> {active}", conn=conn)
     if target:
-        write_audit("update_crew_active", "crew", str(crew_id), f"{target['name']} active {target['active']} -> {active}")
         invalidate_cache("crew")
         status_text = "activated" if active else "deactivated"
         flash(f"Crew member '{target['name']}' {status_text} successfully.", "success")
@@ -1751,13 +1951,15 @@ def settings_update_crew(crew_id: int):
                 "UPDATE crew SET name = ?, active = ? WHERE id = ?",
                 (name, active, crew_id),
             )
+            if target:
+                write_audit(
+                    "update_crew",
+                    "crew",
+                    str(crew_id),
+                    f"{target['name']} ({target['active']}) -> {name} ({active})",
+                    conn=conn
+                )
         if target:
-            write_audit(
-                "update_crew",
-                "crew",
-                str(crew_id),
-                f"{target['name']} ({target['active']}) -> {name} ({active})",
-            )
             invalidate_cache("crew")
             flash(f"Crew member '{name}' updated successfully.", "success")
     except sqlite3.IntegrityError:
@@ -1801,14 +2003,15 @@ def settings_delete_crew(crew_id: int):
                 "delete_crew_failed",
                 "crew",
                 str(crew_id),
-                f"Cannot delete '{crew['name']}' - referenced in {flight_count} flight(s)"
+                f"Cannot delete '{crew['name']}' - referenced in {flight_count} flight(s)",
+                conn=conn
             )
             flash(f"Cannot delete crew member '{crew['name']}' - referenced in {flight_count} flight(s). Mark as inactive instead.", "error")
             return redirect(url_for("settings_crew_page"))
 
         # Safe to delete
         conn.execute("DELETE FROM crew WHERE id = ?", (crew_id,))
-        write_audit("delete_crew", "crew", str(crew_id), f"Deleted crew member: {crew['name']}")
+        write_audit("delete_crew", "crew", str(crew_id), f"Deleted crew member: {crew['name']}", conn=conn)
         logger.info(f"Deleted crew member: {crew['name']} (ID: {crew_id})")
         invalidate_cache("crew")
         flash(f"Crew member '{crew['name']}' deleted successfully.", "success")
@@ -1834,7 +2037,7 @@ def settings_create_aircraft():
                 (tail_number, model, active),
             )
             aircraft_id = cursor.lastrowid
-        write_audit("create_aircraft", "aircraft", str(aircraft_id), f"Added {tail_number} ({model}) active={active}")
+            write_audit("create_aircraft", "aircraft", str(aircraft_id), f"Added {tail_number} ({model}) active={active}", conn=conn)
         invalidate_cache("aircraft")
         flash(f"Aircraft '{tail_number}' added successfully.", "success")
     except sqlite3.IntegrityError:
@@ -1920,13 +2123,15 @@ def settings_update_aircraft_active(aircraft_id: int):
             (aircraft_id,),
         ).fetchone()
         conn.execute("UPDATE aircraft SET active = ? WHERE id = ?", (active, aircraft_id))
+        if target:
+            write_audit(
+                "update_aircraft_active",
+                "aircraft",
+                str(aircraft_id),
+                f"{target['tail_number']} active {target['active']} -> {active}",
+                conn=conn
+            )
     if target:
-        write_audit(
-            "update_aircraft_active",
-            "aircraft",
-            str(aircraft_id),
-            f"{target['tail_number']} active {target['active']} -> {active}",
-        )
         invalidate_cache("aircraft")
         status_text = "activated" if active else "deactivated"
         flash(f"Aircraft '{target['tail_number']}' {status_text} successfully.", "success")
@@ -1956,13 +2161,15 @@ def settings_update_aircraft(aircraft_id: int):
                 "UPDATE aircraft SET tail_number = ?, model = ?, active = ? WHERE id = ?",
                 (tail_number, model, active, aircraft_id),
             )
+            if target:
+                write_audit(
+                    "update_aircraft",
+                    "aircraft",
+                    str(aircraft_id),
+                    f"{target['tail_number']} {target['model']} ({target['active']}) -> {tail_number} {model} ({active})",
+                    conn=conn
+                )
         if target:
-            write_audit(
-                "update_aircraft",
-                "aircraft",
-                str(aircraft_id),
-                f"{target['tail_number']} {target['model']} ({target['active']}) -> {tail_number} {model} ({active})",
-            )
             invalidate_cache("aircraft")
             flash(f"Aircraft '{tail_number}' updated successfully.", "success")
     except sqlite3.IntegrityError:
@@ -2001,7 +2208,8 @@ def settings_delete_aircraft(aircraft_id: int):
                 "delete_aircraft_failed",
                 "aircraft",
                 str(aircraft_id),
-                f"Cannot delete '{aircraft['tail_number']}' - referenced in {flight_count} flight(s)"
+                f"Cannot delete '{aircraft['tail_number']}' - referenced in {flight_count} flight(s)",
+                conn=conn
             )
             flash(f"Cannot delete aircraft '{aircraft['tail_number']}' - referenced in {flight_count} flight(s). Mark as inactive instead.", "error")
             return redirect(url_for("settings_aircraft_page"))
@@ -2012,7 +2220,8 @@ def settings_delete_aircraft(aircraft_id: int):
             "delete_aircraft",
             "aircraft",
             str(aircraft_id),
-            f"Deleted aircraft: {aircraft['tail_number']} {aircraft['model']}"
+            f"Deleted aircraft: {aircraft['tail_number']} {aircraft['model']}",
+            conn=conn
         )
         logger.info(f"Deleted aircraft: {aircraft['tail_number']} {aircraft['model']} (ID: {aircraft_id})")
         invalidate_cache("aircraft")
@@ -2113,6 +2322,46 @@ def settings_download_backup(filename: str):
         download_name=filename,
         mimetype="application/x-sqlite3",
     )
+
+
+@app.post("/settings/backup/delete/<filename>")
+@login_required
+@role_required("admin")
+def settings_delete_backup(filename: str):
+    from flask import jsonify
+
+    # Security: only allow deleting files that match the backup pattern
+    if not filename.startswith("scheduler-backup-") or not filename.endswith(".db"):
+        return jsonify({"success": False, "error": "Invalid backup filename"}), 400
+
+    filepath = os.path.join(BACKUP_DIR, filename)
+    if not os.path.exists(filepath):
+        return jsonify({"success": False, "error": "Backup file not found"}), 404
+
+    # Prevent deletion of the most recent backup as a safety measure
+    backups = []
+    for fname in os.listdir(BACKUP_DIR):
+        if fname.startswith("scheduler-backup-") and fname.endswith(".db"):
+            backups.append((fname, os.path.getmtime(os.path.join(BACKUP_DIR, fname))))
+
+    if backups:
+        backups.sort(key=lambda x: x[1], reverse=True)
+        most_recent = backups[0][0]
+
+        if filename == most_recent:
+            return jsonify({
+                "success": False,
+                "error": "Cannot delete the most recent backup. This is a safety measure."
+            }), 403
+
+    try:
+        os.remove(filepath)
+        write_audit("delete_backup", "database", filename, f"Deleted backup: {filename}")
+        flash(f"Backup {filename} deleted successfully.", "success")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Failed to delete backup {filename}: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.get("/settings/export/flights.csv")
@@ -2224,6 +2473,254 @@ def settings_export_flights_csv():
         as_attachment=True,
         download_name=filename,
         mimetype="text/csv",
+    )
+
+
+@app.get("/settings/import-flights")
+@login_required
+@role_required("admin", "scheduler")
+def settings_import_flights_page():
+    """Display the mass flight import page."""
+    return render_template("import_flights.html", app_version=APP_VERSION)
+
+
+@app.post("/settings/import-flights")
+@login_required
+@role_required("admin", "scheduler")
+def settings_import_flights():
+    """Process CSV flight import with validation and auto-creation of crew/aircraft."""
+    # Read uploaded file
+    upload = request.files.get("import_file")
+    if not upload or not upload.filename:
+        flash("No file uploaded.", "error")
+        return redirect(url_for("settings_import_flights_page"))
+
+    # Parse CSV
+    try:
+        payload = upload.read()
+        try:
+            file_text = payload.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            file_text = payload.decode("latin-1", errors="ignore")
+    except Exception as e:
+        flash(f"Error reading file: {str(e)}", "error")
+        return redirect(url_for("settings_import_flights_page"))
+
+    rows = parse_bulk_rows(file_text)
+    if not rows:
+        flash("No data found in file.", "error")
+        return redirect(url_for("settings_import_flights_page"))
+
+    # Expected headers
+    expected_headers = [
+        "flight_date", "launch_time", "recovery_time", "mission_type", "mission_title",
+        "atp_company", "tail_number", "aircraft_model", "origin", "route", "destination",
+        "pic_name", "pic_is_amc", "pilot_name", "crew_members", "non_rated_crew",
+        "is_team_flight", "amc_mission_id", "notes"
+    ]
+
+    # Check if first row is headers
+    header_row = rows[0]
+    has_headers = any(h.lower().replace("_", " ").replace("-", " ") in [c.lower().replace("_", " ").replace("-", " ") for c in header_row] for h in expected_headers[:5])
+
+    start_idx = 1 if has_headers else 0
+    data_rows = rows[start_idx:]
+
+    if not data_rows:
+        flash("No data rows found after headers.", "error")
+        return redirect(url_for("settings_import_flights_page"))
+
+    # Process rows with validation
+    results = []
+    success_count = 0
+    error_count = 0
+
+    with db_conn() as conn:
+        for idx, row in enumerate(data_rows, start=start_idx + 1):
+            result = {
+                "row_number": idx,
+                "status": "success",
+                "errors": [],
+                "warnings": [],
+                "data": {},
+                "mission_id": None
+            }
+
+            try:
+                # Parse and validate required fields
+                if len(row) < 11:  # Minimum required fields
+                    result["status"] = "error"
+                    result["errors"].append(f"Insufficient columns (need at least 11, got {len(row)})")
+                    error_count += 1
+                    results.append(result)
+                    continue
+
+                # Extract fields (with defaults for optional fields)
+                flight_date = row[0].strip() if len(row) > 0 else ""
+                launch_time = row[1].strip() if len(row) > 1 else ""
+                recovery_time = row[2].strip() if len(row) > 2 else ""
+                mission_type = row[3].strip().lower() if len(row) > 3 else "training"
+                mission_title = row[4].strip() if len(row) > 4 else ""
+                atp_company = row[5].strip() if len(row) > 5 else ""
+                tail_number = row[6].strip() if len(row) > 6 else ""
+                aircraft_model = row[7].strip() if len(row) > 7 else ""
+                origin = row[8].strip() if len(row) > 8 else ""
+                route = row[9].strip() if len(row) > 9 else ""
+                destination = row[10].strip() if len(row) > 10 else ""
+                pic_name = row[11].strip() if len(row) > 11 else ""
+                pic_is_amc = coerce_checkbox(row[12].strip() if len(row) > 12 else "0")
+                pilot_name = row[13].strip() if len(row) > 13 else ""
+                crew_members = row[14].strip() if len(row) > 14 else ""
+                non_rated_crew = row[15].strip() if len(row) > 15 else ""
+                is_team_flight = coerce_checkbox(row[16].strip() if len(row) > 16 else "0")
+                amc_mission_id = row[17].strip() if len(row) > 17 else ""
+                notes = row[18].strip() if len(row) > 18 else ""
+
+                # Validate required fields
+                if not flight_date:
+                    result["errors"].append("Missing flight_date")
+                if not launch_time:
+                    result["errors"].append("Missing launch_time")
+                if not recovery_time:
+                    result["errors"].append("Missing recovery_time")
+                if not mission_title:
+                    result["errors"].append("Missing mission_title")
+                if not atp_company:
+                    result["errors"].append("Missing atp_company")
+                elif atp_company not in ["A Co", "B Co", "C Co"]:
+                    result["errors"].append(f"Invalid atp_company '{atp_company}' (must be A Co, B Co, or C Co)")
+                if not tail_number:
+                    result["errors"].append("Missing tail_number")
+                if not origin:
+                    result["errors"].append("Missing origin")
+                if not destination:
+                    result["errors"].append("Missing destination")
+                if not pic_name:
+                    result["errors"].append("Missing pic_name")
+                if not pilot_name:
+                    result["errors"].append("Missing pilot_name")
+
+                # Validate mission type
+                if mission_type not in ["training", "mission"]:
+                    result["errors"].append(f"Invalid mission_type '{mission_type}' (must be 'training' or 'mission')")
+                    mission_type = "training"  # Default fallback
+
+                # Validate date format
+                try:
+                    datetime.strptime(flight_date, DATE_FMT)
+                except ValueError:
+                    result["errors"].append(f"Invalid date format '{flight_date}' (expected YYYY-MM-DD)")
+
+                # Validate time formats
+                try:
+                    datetime.strptime(launch_time, TIME_FMT)
+                except ValueError:
+                    result["errors"].append(f"Invalid launch_time format '{launch_time}' (expected HH:MM)")
+
+                try:
+                    datetime.strptime(recovery_time, TIME_FMT)
+                except ValueError:
+                    result["errors"].append(f"Invalid recovery_time format '{recovery_time}' (expected HH:MM)")
+
+                # If validation errors, mark as error and continue
+                if result["errors"]:
+                    result["status"] = "error"
+                    error_count += 1
+                    results.append(result)
+                    continue
+
+                # Auto-create PIC if doesn't exist
+                existing_pic = conn.execute("SELECT id FROM crew WHERE name = ?", (pic_name,)).fetchone()
+                if not existing_pic:
+                    conn.execute("INSERT INTO crew (name, active) VALUES (?, 1)", (pic_name,))
+                    result["warnings"].append(f"Auto-created crew member: {pic_name}")
+
+                # Auto-create Pilot if doesn't exist (and different from PIC)
+                if pilot_name != pic_name:
+                    existing_pilot = conn.execute("SELECT id FROM crew WHERE name = ?", (pilot_name,)).fetchone()
+                    if not existing_pilot:
+                        conn.execute("INSERT INTO crew (name, active) VALUES (?, 1)", (pilot_name,))
+                        result["warnings"].append(f"Auto-created crew member: {pilot_name}")
+
+                # Auto-create aircraft if doesn't exist
+                existing_aircraft = conn.execute("SELECT id FROM aircraft WHERE tail_number = ?", (tail_number,)).fetchone()
+                if not existing_aircraft:
+                    conn.execute("INSERT INTO aircraft (tail_number, model, active) VALUES (?, ?, 1)", (tail_number, aircraft_model or "Unknown"))
+                    result["warnings"].append(f"Auto-created aircraft: {tail_number} ({aircraft_model or 'Unknown'})")
+
+                # Generate mission ID
+                mission_id = next_mission_id(conn, flight_date)
+                result["mission_id"] = mission_id
+
+                # Build crew summary
+                crew_data = {
+                    "pic_name": pic_name,
+                    "pic_is_amc": pic_is_amc,
+                    "pilot_name": pilot_name,
+                    "crew_members": crew_members,
+                    "non_rated_crew": non_rated_crew
+                }
+                crew_summary = build_crew_summary(crew_data)
+
+                # Insert flight
+                conn.execute(
+                    """
+                    INSERT INTO flights (
+                        mission_id, flight_date, launch_time, recovery_time, mission_type, mission_title,
+                        tail_number, origin, route, destination, crew, pic_name, pic_is_amc, pilot_name,
+                        crew_members, non_rated_crew, is_team_flight, amc_mission_id, notes, atp_company
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        mission_id, flight_date, launch_time, recovery_time, mission_type, mission_title,
+                        tail_number, origin, route, destination, crew_summary, pic_name, pic_is_amc, pilot_name,
+                        crew_members, non_rated_crew, is_team_flight, amc_mission_id, notes, atp_company
+                    )
+                )
+
+                # Store parsed data for display
+                result["data"] = {
+                    "mission_id": mission_id,
+                    "flight_date": flight_date,
+                    "launch_time": launch_time,
+                    "recovery_time": recovery_time,
+                    "mission_type": mission_type,
+                    "mission_title": mission_title,
+                    "atp_company": atp_company,
+                    "tail_number": tail_number,
+                    "pic_name": pic_name,
+                    "pilot_name": pilot_name
+                }
+
+                success_count += 1
+
+            except Exception as e:
+                result["status"] = "error"
+                result["errors"].append(f"Unexpected error: {str(e)}")
+                error_count += 1
+
+            results.append(result)
+
+    # Invalidate caches
+    invalidate_cache("crew")
+    invalidate_cache("aircraft")
+
+    # Write audit log
+    write_audit(
+        "bulk_import_flights",
+        "flight",
+        "bulk",
+        f"Flight import complete: {success_count} imported, {error_count} failed"
+    )
+
+    # Render results page
+    return render_template(
+        "import_flights.html",
+        results=results,
+        success_count=success_count,
+        error_count=error_count,
+        total_count=len(data_rows),
+        app_version=APP_VERSION
     )
 
 
