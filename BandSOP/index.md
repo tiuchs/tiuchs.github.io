@@ -9,8 +9,6 @@
 **Document custodian:** [Tim Iuchs]  
 **Status:** For chapter-by-chapter review; approval pending
 
-> **Source and revision note:** This working copy was reconstructed from the requirements available in the referenced “Road Crew SOP Draft” conversation. The prior assistant responses were returned as content-reference placeholders, so their original chapter text and appendix register could not be recovered. This document is a complete proposed 12-chapter SOP and appendix register, not a verbatim transcription. It incorporates the requested three-director hierarchy, designated assistant director equipment accountability, and event-specific dietary assessment.
-
 ## Table of Contents
 
 1. [Purpose, Scope, and Operating Principles](#chapter-1-purpose-scope-and-operating-principles)
